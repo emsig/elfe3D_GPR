@@ -2,7 +2,7 @@
 Modelling with the total electric field approach using finite elements in 3D
 
 In this `elfe3D` version, the dielectric permitticity is a variable model parameter.
-It will be tested and anvanced for 3D Ground Penetrating Radar (GPR) modelling.
+It will be tested and anvanced for 3D Ground Penetrating Radar (GPR) modelling by Chaitanya Singh.
 
 _About:_
 
