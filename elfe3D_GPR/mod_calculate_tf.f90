@@ -4,7 +4,7 @@
 !!
 !> written by Paula Rulff, 24/06/2019
 !!
-!> Copyright (C) Paula Rulff 2020
+!> Copyright (C) Paula Rulff 2025
 !>
 !>  This file is part of elfe3D.
 !> 
@@ -152,5 +152,303 @@ contains
 
    !--------------------------------------------------------------------
    end subroutine calculate_fields
+
+   !---------------------------------------------------------------------
+   !> @brief
+   !> new in elfe3D_GPR, @PR
+   !> subroutine for writing domain field components in .vtk files for
+   !> viewing in paraview
+   !---------------------------------------------------------------------
+   subroutine write_vtk_fields (M, refStep, MeshFileName, &
+                                domain_Efields, domain_Hfields)
+   
+     ! INPUT
+     integer, intent(in) :: M, refStep
+     complex(kind=dp), dimension(:,:), intent(in) :: domain_Efields, &
+                                                    domain_Hfields
+
+
+     ! LOCAL variables
+     integer :: i, mi
+     integer :: opening, length, io
+     character(len = 255) :: vtkFile
+     character(len = 50) :: StringStep, StringEnding, MeshFileName
+
+    !--------------------------------------------------------------------
+     ! initialise length to zero
+     length = 0
+     ! define name of vtk file
+     write(StringStep , *) refStep
+     StringEnding = ".vtk"
+     vtkFile = trim(adjustl(MeshFileName))// &
+               trim(adjustl(StringStep))//trim(adjustl(StringEnding))
+     print*, 'Domain fields are written into ', vtkFile
+
+     ! detect file length:
+     ! open file
+     open (999, file = trim(vtkFile), status='old', iostat = opening)
+     ! was opening successful?
+     if (opening /= 0) then
+       call Write_Error_Message(log_unit, &
+               ' file ' // trim(vtkFile) // ' could not be opened')
+     else
+         length = 0 !40829
+         ! loop all lines
+         do
+             read(999, *, iostat = io)
+             ! if end of file, exit loop
+             if (io/=0) exit
+             ! increment line counter
+             length = length + 1
+         end do
+         close(unit=999)
+     end if
+
+     ! Write field components in file
+     ! open file
+     open (999, file = trim(vtkFile), status='old', iostat = opening)
+     ! was opening successful?
+     if (opening /= 0) then
+        call Write_Error_Message(log_unit, &
+               ' file ' // trim(vtkFile) // ' could not be opened')
+     else
+
+        do i = 1,length
+            read(999,*)
+        end do
+
+        ! write new lines at the end of vtk file
+
+        !-----------------------------Ex--------------------------------
+        write(999,*)'SCALARS Real_Ex double 1'
+        write(999,*)'LOOKUP_TABLE default'
+
+        ! write real Ex component
+        do mi = 1,M
+            write(999,*) real(domain_Efields(mi,1))
+        end do
+
+        write(999,*)' '
+        write(999,*)'SCALARS Imag_Ex double 1'
+        write(999,*)'LOOKUP_TABLE default'
+
+        ! write Imag Ex component
+        do mi = 1,M
+            write(999,*) aimag(domain_Efields(mi,1))
+        end do
+
+        write(999,*)' '
+        write(999,*)'SCALARS Amplitude_Ex double 1'
+        write(999,*)'LOOKUP_TABLE default'
+
+        ! write Amplitude Ex
+        do mi = 1,M
+            write(999,*) abs(domain_Efields(mi,1))
+        end do
+
+        write(999,*)' '
+        write(999,*)'SCALARS Phase_Ex double 1'
+        write(999,*)'LOOKUP_TABLE default'
+
+        ! write Phase Ex in degree
+        do mi = 1,M
+            write(999,*) datan2d(aimag(domain_Efields(mi,1)), &
+                                  real(domain_Efields(mi,1)))
+        end do
+
+
+        !-----------------------------Ey--------------------------------
+        write(999,*)' '
+        write(999,*)'SCALARS Real_Ey double 1'
+        write(999,*)'LOOKUP_TABLE default'
+
+        ! write Real Ey
+        do mi = 1,M
+            write(999,*) real(domain_Efields(mi,2))
+        end do
+
+        write(999,*)' '
+        write(999,*)'SCALARS Imag_Ey double 1'
+        write(999,*)'LOOKUP_TABLE default'
+
+        ! write Imag Ey
+        do mi = 1,M
+            write(999,*) aimag(domain_Efields(mi,2))
+        end do
+
+        write(999,*)' '
+        write(999,*)'SCALARS Amplitude_Ey  double 1'
+        write(999,*)'LOOKUP_TABLE default'
+
+        ! write Amplitude Ey
+        do mi = 1,M
+            write(999,*) abs(domain_Efields(mi,2))
+        end do
+
+        write(999,*)' '
+        write(999,*)'SCALARS Phase_Ey double 1'
+        write(999,*)'LOOKUP_TABLE default'
+
+        ! write Phase Ey in degrees
+        do mi = 1,M
+            write(999,*) atan2(aimag(domain_Efields(mi,2)), &
+                                  real(domain_Efields(mi,2))) * 180.0_dp / pi ! rescale to degrees
+        end do
+
+        !-----------------------------Ez--------------------------------
+        write(999,*)' '
+        write(999,*)'SCALARS Real_Ez double 1'
+        write(999,*)'LOOKUP_TABLE default'
+        ! write Real Ez
+        do mi = 1,M
+            write(999,*) real(domain_Efields(mi,3))
+        end do
+
+        write(999,*)' '
+        write(999,*)'SCALARS Imag_Ez double 1'
+        write(999,*)'LOOKUP_TABLE default'
+
+        ! write Imag Ez
+        do mi = 1,M
+            write(999,*) aimag(domain_Efields(mi,3))
+        end do
+
+        write(999,*)' '
+        write(999,*)'SCALARS Amplitude_Ez double 1'
+        write(999,*)'LOOKUP_TABLE default'
+
+        ! write Amplitude Ez
+        do mi = 1,M
+            write(999,*) abs(domain_Efields(mi,3))
+        end do
+
+        write(999,*)' '
+        write(999,*)'SCALARS Phase_Ez double 1'
+        write(999,*)'LOOKUP_TABLE default'
+
+        ! write Phase Ez in degrees
+        do mi = 1,M
+            write(999,*) atan2(aimag(domain_Efields(mi,3)), &
+                                  real(domain_Efields(mi,3))) * 180.0_dp / pi ! rescale to degrees
+        end do
+
+        !-----------------------------Hx--------------------------------
+        write(999,*)'SCALARS Real_Hx double 1'
+        write(999,*)'LOOKUP_TABLE default'
+
+        ! write real Hx component
+        do mi = 1,M
+            write(999,*) real(domain_Hfields(mi,1))
+        end do
+
+        write(999,*)' '
+        write(999,*)'SCALARS Imag_Hx double 1'
+        write(999,*)'LOOKUP_TABLE default'
+
+        ! write Imag Hx component
+        do mi = 1,M
+            write(999,*) aimag(domain_Hfields(mi,1))
+        end do
+
+        write(999,*)' '
+        write(999,*)'SCALARS Amplitude_Hx double 1'
+        write(999,*)'LOOKUP_TABLE default'
+
+        ! write Amplitude Ex
+        do mi = 1,M
+            write(999,*) abs(domain_Hfields(mi,1))
+        end do
+
+        write(999,*)' '
+        write(999,*)'SCALARS Phase_Hx double 1'
+        write(999,*)'LOOKUP_TABLE default'
+
+        ! write Phase Hx in degree
+        do mi = 1,M
+            write(999,*) atan2(aimag(domain_Hfields(mi,1)), &
+                                  real(domain_Hfields(mi,1))) * 180.0_dp / pi ! rescale to degrees
+        end do
+
+
+        !-----------------------------Ey--------------------------------
+        write(999,*)' '
+        write(999,*)'SCALARS Real_Hy double 1'
+        write(999,*)'LOOKUP_TABLE default'
+
+        ! write Real Hy
+        do mi = 1,M
+            write(999,*) real(domain_Hfields(mi,2))
+        end do
+
+        write(999,*)' '
+        write(999,*)'SCALARS Imag_Hy double 1'
+        write(999,*)'LOOKUP_TABLE default'
+
+        ! write Imag Hy
+        do mi = 1,M
+            write(999,*) aimag(domain_Hfields(mi,2))
+        end do
+
+        write(999,*)' '
+        write(999,*)'SCALARS Amplitude_Hy  double 1'
+        write(999,*)'LOOKUP_TABLE default'
+
+        ! write Amplitude Hy
+        do mi = 1,M
+            write(999,*) abs(domain_Hfields(mi,2))
+        end do
+
+        write(999,*)' '
+        write(999,*)'SCALARS Phase_Hy double 1'
+        write(999,*)'LOOKUP_TABLE default'
+
+        ! write Phase Hy in degrees
+        do mi = 1,M
+            write(999,*) atan2(aimag(domain_Hfields(mi,2)), &
+                                  real(domain_Hfields(mi,2))) * 180.0_dp / pi ! rescale to degrees
+        end do
+
+        !-----------------------------Hz--------------------------------
+        write(999,*)' '
+        write(999,*)'SCALARS Real_Hz double 1'
+        write(999,*)'LOOKUP_TABLE default'
+        ! write Real Hz
+        do mi = 1,M
+            write(999,*) real(domain_Hfields(mi,3))
+        end do
+
+        write(999,*)' '
+        write(999,*)'SCALARS Imag_Hz double 1'
+        write(999,*)'LOOKUP_TABLE default'
+
+        ! write Imag Hz
+        do mi = 1,M
+            write(999,*) aimag(domain_Hfields(mi,3))
+        end do
+
+        write(999,*)' '
+        write(999,*)'SCALARS Amplitude_Hz double 1'
+        write(999,*)'LOOKUP_TABLE default'
+
+        ! write Amplitude Hz
+        do mi = 1,M
+            write(999,*) abs(domain_Hfields(mi,3))
+        end do
+
+        write(999,*)' '
+        write(999,*)'SCALARS Phase_Hz double 1'
+        write(999,*)'LOOKUP_TABLE default'
+
+        ! write Phase Hz in degrees
+        do mi = 1,M
+            write(999,*) atan2(aimag(domain_Hfields(mi,3)), &
+                                  real(domain_Hfields(mi,3))) * 180.0_dp / pi ! rescale to degrees
+        end do
+
+
+        close(unit=999)
+     end if
+   !--------------------------------------------------------------------
+   end subroutine write_vtk_fields
 
   end module calculate_tf

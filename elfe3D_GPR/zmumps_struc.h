@@ -1,9 +1,9 @@
 !
-!  This file is part of MUMPS 5.6.2, released
-!  on Wed Oct 11 09:36:25 UTC 2023
+!  This file is part of MUMPS 5.7.3, released
+!  on Mon Jul 15 11:44:21 UTC 2024
 !
 !
-!  Copyright 1991-2023 CERFACS, CNRS, ENS Lyon, INP Toulouse, Inria,
+!  Copyright 1991-2024 CERFACS, CNRS, ENS Lyon, INP Toulouse, Inria,
 !  Mumps Technologies, University of Bordeaux.
 !
 !  This version of MUMPS is provided to you free of charge. It is
@@ -46,7 +46,14 @@
         INTEGER(8) :: NNZ ! 64-bit integer input
         COMPLEX(kind=8), DIMENSION(:), POINTER :: A
         INTEGER, DIMENSION(:), POINTER :: IRN, JCN
-        DOUBLE PRECISION, DIMENSION(:), POINTER :: COLSCA, ROWSCA, pad0
+!    --------------
+!    Scaling arrays
+!    --------------
+        DOUBLE PRECISION, DIMENSION(:), POINTER :: COLSCA, ROWSCA
+        DOUBLE PRECISION, DIMENSION(:), POINTER :: COLSCA_loc
+        DOUBLE PRECISION, DIMENSION(:), POINTER :: ROWSCA_loc
+        INTEGER, DIMENSION(:), POINTER :: ROWIND, COLIND
+        COMPLEX(kind=8), DIMENSION(:), POINTER :: PIVOTS
 !
 !       ------------------------------------
 !       Case of distributed assembled matrix
@@ -96,7 +103,8 @@
         INTEGER, DIMENSION(:), POINTER :: ISOL_loc
         INTEGER, DIMENSION(:), POINTER :: IRHS_loc
         INTEGER :: LRHS, NRHS, NZ_RHS, Nloc_RHS, LRHS_loc, LREDRHS
-        INTEGER :: LSOL_loc, pad6
+        INTEGER :: LSOL_loc, NSOL_loc
+        INTEGER :: LD_RHSINTR, pad6
 !    ----------------------------
 !    Control parameters,
 !    statistics and output data
@@ -138,16 +146,16 @@
 !    -----------
 !    Out-of-core
 !    -----------
-        CHARACTER(LEN=255) :: OOC_TMPDIR
-        CHARACTER(LEN=63) :: OOC_PREFIX
+        CHARACTER(LEN=1023) :: OOC_TMPDIR
+        CHARACTER(LEN=255) :: OOC_PREFIX
 !    ------------------------------------------
 !    Name of file to dump a matrix/rhs to disk
 !    ------------------------------------------
-        CHARACTER(LEN=255) ::  WRITE_PROBLEM
+        CHARACTER(LEN=1023) ::  WRITE_PROBLEM
 !    -----------
 !    Save/Restore
 !    -----------
-        CHARACTER(LEN=255) :: SAVE_DIR
+        CHARACTER(LEN=1023) :: SAVE_DIR
         CHARACTER(LEN=255)  :: SAVE_PREFIX
         CHARACTER(LEN=7)   ::  pad7  
 !
@@ -165,7 +173,7 @@
         INTEGER, DIMENSION(:), POINTER :: IS
         INTEGER ::  KEEP(500)
 !       The following data/arrays are computed during the analysis
-!       phase and used during the factorization and solve phases.
+!       phase and used during the and solve phases.
         INTEGER ::  LNA
         INTEGER ::  NBSA
         INTEGER,POINTER,DIMENSION(:) :: STEP, NE_STEPS, ND_STEPS
@@ -199,10 +207,10 @@
 !       For heterogeneous architecture
         INTEGER, DIMENSION(:), POINTER :: MEM_DIST
 !       Compressed RHS
-        INTEGER, DIMENSION(:),   POINTER :: POSINRHSCOMP_ROW
-        LOGICAL  :: POSINRHSCOMP_COL_ALLOC, pad11
-        INTEGER, DIMENSION(:),   POINTER :: POSINRHSCOMP_COL
-        COMPLEX(kind=8), DIMENSION(:),   POINTER :: RHSCOMP
+        INTEGER, DIMENSION(:),   POINTER :: GLOB2LOC_RHS
+        LOGICAL  :: GLOB2LOC_SOL_ALLOC, pad11
+        INTEGER, DIMENSION(:),   POINTER :: GLOB2LOC_SOL
+        COMPLEX(kind=8), DIMENSION(:),   POINTER :: RHSINTR
 !       Info on the subtrees to be used during factorization
         DOUBLE PRECISION, DIMENSION(:), POINTER :: MEM_SUBTREE
         DOUBLE PRECISION, DIMENSION(:), POINTER :: COST_TRAV
@@ -216,7 +224,7 @@
         INTEGER, DIMENSION(:),   POINTER :: SCHED_GRP
         INTEGER, DIMENSION(:),   POINTER :: SCHED_SBTR
         INTEGER, DIMENSION(:),   POINTER :: CROIX_MANU
-        COMPLEX(kind=8), DIMENSION(:), POINTER :: WK_USER
+        COMPLEX(kind=8), DIMENSION(:),   POINTER :: WK_USER
         INTEGER :: NBSA_LOCAL
         INTEGER :: LWK_USER
 !    Internal control array
@@ -277,7 +285,7 @@
 ! Mapping of the subtree nodes
         INTEGER, DIMENSION(:), POINTER :: L0_OMP_MAPPING
 ! Mpi to omp - mumps agile
-        INTEGER, DIMENSION(:), POINTER :: MPITOOMP_PROCS_MAP
+        INTEGER, DIMENSION(:), POINTER :: MTKO_PROCS_MAP
 ! for RR on root
         DOUBLE PRECISION, DIMENSION(:), POINTER :: SINGULAR_VALUES
         INTEGER ::  NB_SINGULAR_VALUES

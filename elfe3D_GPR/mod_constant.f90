@@ -2,11 +2,11 @@
 !> Module of elfe3d containing definitions of constants
 !!
 !> written by Paula Rulff and Thomas Kalscheuer, 
-!> 23/07/2019, extended 04/2020
+!> 23/07/2019, extended 04/2020 and 05/2025
 !!
-!> Last change: March 2024
+!> Last change: May 2025
 !!
-!> Copyright (C) Paula Rulff & Thomas Kalscheuer 2024
+!> Copyright (C) Paula Rulff, Thomas Kalscheuer & Chaitanya Dinesh Singh, 2025
 !>
 !>  This file is part of elfe3D.
 !> 
@@ -41,7 +41,7 @@ module mod_constant
   real(kind=dp), parameter, public :: D1 = 1.0_dp
   real(kind=dp), parameter, public :: D2 = 2.0_dp
   real(kind=dp), parameter, public :: D10 = 10.0_dp
-  complex(kind=dp), parameter, public :: ZEROW = (D0, D0)
+  complex(kind=dp), parameter, public :: ZEROW = cmplx(D0, D0, kind=dp)
 
   ! mathematical and physical constants
   real(kind=dp), parameter, public :: pi = D2*asin(D1)   ! 3.14159265359
@@ -54,5 +54,8 @@ module mod_constant
   real(kind=dp), parameter, public :: epsilon_0 = 8.854E-12_dp
   ! magnetic permeability of free space
   real(kind=dp), parameter, public :: mu_0 = 4.0E-07_dp*pi
-
+  ! speed of light in vacuum
+  real(kind=dp), parameter, public :: c_0 = 1.0_dp/sqrt(mu_0*epsilon_0)
+  ! new in version elfe3D_GPR, @CS: High-Frequency specific parameters
+  real(kind=dp), parameter, public :: Z_0 = sqrt(mu_0/epsilon_0)  ! impedance of free space
 end module mod_constant

@@ -191,7 +191,7 @@ contains
                 call Check_Input(log_unit, 'accuracyTol')
              end if
           ! vtk
-          else if (index(ctmp,'vtk') > 0) then
+          else if (index(ctmp,'vtkRef') > 0) then
              bwrd = BegWrd(ctmp,2)
              ewrd = EndWrd(ctmp,2)
              read (unit=ctmp(bwrd:ewrd),fmt=*,iostat=ctmpCode) vtk
@@ -564,15 +564,24 @@ contains
   !---------------------------------------------------------------------
   !> @brief
   !> subroutine for defining output files
-  !> Define the following in input file: output_E_file, output_E_file
+  !> Define the following in input file: 
+  !> num_rec
+  !> output_E_file, output_E_file
+  !> output_fields_vtk (from version 1.1.0)
   !---------------------------------------------------------------------
-  subroutine define_output (EFile, HFile, num_rec)
+  subroutine define_output (EFile, HFile, num_rec, fields_vtk)
   
     ! OUTPUT
     character(len = 500), intent(out) :: EFile, HFile
     integer, intent(out) :: num_rec
+    ! new in version 1.1.0
+    integer, intent(out) :: fields_vtk
     
     !-------------------------------------------------------------------
+    ! initialise 
+    num_rec = 0
+    fields_vtk = 0
+    
     ! Read from elfe3D_input.txt
     ! open the file
     open (in_unit, file = trim(FileName), status='old', &
@@ -610,6 +619,16 @@ contains
              if ((ctmpCode /= 0)) then
                 call Check_Input(log_unit, 'output_H_file')
              end if
+          ! new in version 1.1.0
+          ! read output_fields_vtk
+          else if (index(ctmp,'output_fields_vtk') > 0) then
+             bwrd = BegWrd(ctmp,2)
+             ewrd = EndWrd(ctmp,2)
+             read (unit=ctmp(bwrd:ewrd),fmt=*,iostat=ctmpCode)fields_vtk
+             if ((ctmpCode /= 0) .or. (fields_vtk < 0) &
+                                 .or. (fields_vtk > 1)) then
+                call Check_Input(log_unit, ' output_fields_vtk')
+             end if          
           end if
           ! read next line
           read (unit=in_unit, fmt=lfm, iostat=ReadCode) ctmp
@@ -841,6 +860,71 @@ contains
     end do receiver_loop
    !--------------------------------------------------------------------
   end subroutine define_rec
+
+  !---------------------------------------------------------------------
+  !> @brief
+  !> new in elfe3D_GPR, @CS
+  !> Subroutine for defining PML
+  !> Define the following in input file:
+  !> PML_present
+  !> PML_thickness
+  !> PML_decay_type
+  !---------------------------------------------------------------------
+  subroutine define_PML(PML_present, PML_thickness, PML_decay_type)
+
+    ! OUTPUT
+    integer, intent(out) :: PML_present
+    real(kind=dp), intent(out) :: PML_thickness
+    integer, intent(out) :: PML_decay_type
+
+    !-------------------------------------------------------------------
+    ! Read from elfe3D_input.txt
+    ! open the file
+    open (in_unit, file = trim(FileName), status='old', &
+                   action = 'read', iostat = opening)
+
+    ! was opening successful?
+    if (opening /= 0) then
+        call Write_Error_Message(log_unit, &
+        'define_PML: file '//trim(FileName)//' could not be opened')
+    else
+       ! read parameters
+       read (unit=in_unit, fmt=lfm, iostat=ReadCode) ctmp
+       line_read_loop: do while (ReadCode == 0)
+          ! PML_present 
+          if (index(ctmp,'PML_present') > 0) then
+             bwrd = BegWrd(ctmp,2)
+             ewrd = EndWrd(ctmp,2)
+             read (unit=ctmp(bwrd:ewrd),fmt=*,iostat=ctmpCode) PML_present
+             if ((ctmpCode /= 0) .or. (PML_present < 0) .or. (PML_present > 1)) then
+                call Check_Input(log_unit, 'PML_present')
+             end if
+          ! PML_thickness 
+          else if (index(ctmp,'PML_thickness') > 0) then
+             bwrd = BegWrd(ctmp,2)
+             ewrd = EndWrd(ctmp,2)
+             read (unit=ctmp(bwrd:ewrd),fmt=*,iostat=ctmpCode) &
+                                                         PML_thickness
+             if ((ctmpCode /= 0) .or. (PML_thickness < 0)) then
+                call Check_Input(log_unit, 'PML_thickness')
+             end if
+         ! PML_decay_type
+          else if (index(ctmp,'PML_decay_type') > 0) then
+             bwrd = BegWrd(ctmp,2)
+             ewrd = EndWrd(ctmp,2)
+             read (unit=ctmp(bwrd:ewrd),fmt=*,iostat=ctmpCode) PML_decay_type
+             if ((ctmpCode /= 0) .or. (PML_decay_type < 1) .or. (PML_decay_type > 4)) then
+                call Check_Input(log_unit, 'PML_decay_type')
+             end if
+          end if  
+          ! read next line
+          read (unit=in_unit, fmt=lfm, iostat=ReadCode) ctmp
+       end do line_read_loop
+       ! close input file
+       close (unit = in_unit)
+    end if
+   !--------------------------------------------------------------------
+  end subroutine define_PML
 
 end module define_model
 

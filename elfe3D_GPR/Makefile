@@ -1,5 +1,5 @@
 # choose compiler
-FCC = gfortran
+FCC = gfortran-10
 
 # determine operating system
 OS = $(shell uname)
@@ -9,7 +9,7 @@ ARCH = $(shell uname -m)
 HOST = $(shell hostname)
 
 # additional directory for shared libraries
-LIBDIR = $(HOME)/lib
+LIBDIR = /mnt/f/Projects/EMGeoInversion/Setup_Aid/elfe3D/Dependencies/MUMPS_5.7.3/lib
 
 
 # object files created during compilation
@@ -30,7 +30,7 @@ OBJ =   mod_constant.o \
 	mod_calculate_tf.o \
 	mod_error_estimates.o \
 	mod_tetgen_operations.o \
-	elfe3d.o
+	elfe3d_gpr.o
 
 
 ##-------------------------------------------------------------------------------------
@@ -38,7 +38,7 @@ OBJ =   mod_constant.o \
 ##
 ## for gfortran
 ##
-ifeq (${FCC},gfortran)
+ifeq (${FCC},gfortran-10)
 ifeq (${OS},Linux)
 # link MUMPS libaries here!
 OBJUTIL = -L/usr/local/lib -L$(LIBDIR) -lpthread -lm -lzmumps -lmumps_common -lesmumps -lpord -lmpiseq -L/usr/lib -lscotch -lmetis -lopenblas
@@ -86,7 +86,7 @@ $(OBJ): %.o: %.f90
 # Linking stage
 #
 all: $(OBJ)
-	$(FCC) $(FFLAGS) $(OBJ) $(OBJUTIL) -o elfe3d
+	$(FCC) $(FFLAGS) $(OBJ) $(OBJUTIL) -o elfe3d_gpr
 
 
 # clean up
@@ -96,4 +96,3 @@ ifeq (${OS},Linux)
 clean:
 	-\rm *.o *.mod in/*.vol
 endif
-
