@@ -60,8 +60,8 @@ contains
 
     ! initialise
     el2ed = 0
-
-    !$OMP PARALLEL DO
+    
+      !$OMP PARALLEL DO
       element_loop: do i = 1,M
         
          edge_loop: do j = 1,E
@@ -116,7 +116,7 @@ contains
          end do edge_loop
 
       end do element_loop
-    !$OMP END PARALLEL DO
+      !$OMP END PARALLEL DO
 
   end subroutine calc_connect_matrix
 

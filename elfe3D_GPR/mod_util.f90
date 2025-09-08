@@ -644,6 +644,45 @@ contains
 
   end subroutine unique_real_2D
 
+  !---------------------------------------------------------------------
+  !> TETRAHEDRON GEOMETRY
+  !> new in version 1.1.0
+  !> subroutine for calculating the centroids of all mesh tetrahedra with  
+  !> nodes n1, n2 and n3
+  !---------------------------------------------------------------------
+  subroutine tetrahedra_centroids(n1, n2, n3, n4, M, elem_centr)
+    ! INPUT
+    ! x,y,z coordinates of element nodes
+    real(kind=dp), dimension(:,:), intent(in) :: n1, n2, n3, n4
+    ! number of elements in mesh
+    integer :: M
+
+    ! OUTPUT
+    ! x,y,z coordinates of element centroids
+    real (kind=dp), allocatable, dimension(:,:), intent(out) :: &
+                                                              elem_centr
+
+    ! LOCAL VARIABLES
+    ! allocation status
+    integer :: allo_stat
+
+    !-------------------------------------------------------------------
+    ! allocate output array
+    allocate (elem_centr(M,3), stat = allo_stat)
+    call allocheck(log_unit, allo_stat, &
+                    "error allocating element centroid array")
+
+    ! initialise output array
+    elem_centr = 0.0_dp
+    
+    ! calculate centroids
+    elem_centr(:,1) = (n1(:,1)+n2(:,1)+n3(:,1)+n4(:,1))/4.0_dp
+    elem_centr(:,2) = (n1(:,2)+n2(:,2)+n3(:,2)+n4(:,2))/4.0_dp
+    elem_centr(:,3) = (n1(:,3)+n2(:,3)+n3(:,3)+n4(:,3))/4.0_dp
+   !--------------------------------------------------------------------
+   end subroutine tetrahedra_centroids
+
+
   !----------------------------------------------------------------------
 
 end module mod_util

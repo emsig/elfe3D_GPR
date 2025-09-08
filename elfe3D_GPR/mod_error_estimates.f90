@@ -33,10 +33,11 @@ contains
   !---------------------------------------------------------------------
   !> @brief
   !> subroutine for calculating elemental residuals res_s, res_w
+  !> new in elfe3D_GPR, @CS: Adapting this for the new PDE
   !---------------------------------------------------------------------
-  subroutine calculate_elemental_residuals (M, w, el2ed, &
+  subroutine calculate_elemental_residuals (num_non_PML_elements, non_PML_elements, k_0, el2ed, &
                                             S, Wg, Cg, Bg, &
-                                            rho, Ve, el2edl, ed_sign, &
+                                            epsilon_r_eff, Ve, el2edl, ed_sign, &
                                             a_start, a_end, &
                                             b_start, b_end, &
                                             c_start, c_end, &
@@ -44,11 +45,13 @@ contains
                                             el2nd, nd, res_s, res_w)
   
     ! INPUT
-    integer, intent(in) :: M
-    real(kind=dp), intent(in) :: w
+    integer, intent(in) :: num_non_PML_elements
+    integer, dimension(:), intent(in) :: non_PML_elements
+    real(kind=dp), intent(in) :: k_0
     integer, dimension(:,:), intent(in) :: el2ed, el2nd
     complex (kind=dp), dimension(:), intent(in) :: S, Wg, Cg, Bg
-    real(kind=dp), dimension(:), intent(in) :: rho, Ve
+    real(kind=dp), dimension(:), intent(in) :: Ve
+    complex(kind=dp), dimension(:), intent(in) :: epsilon_r_eff
     real(kind=dp), dimension(:,:), intent(in) :: el2edl, ed_sign, nd
     real(kind=dp), dimension(:,:), intent(in) :: a_start, a_end, &
                                                  b_start, b_end, &
@@ -61,7 +64,7 @@ contains
     
     
     ! LOCAL variables
-    integer :: mi, i, e
+    integer :: mi, i, e, ni
     integer :: allo_stat
     real(kind=dp) :: abs_res_s, abs_res_w
     complex (kind=dp) :: factor, ae, aw
@@ -78,11 +81,11 @@ contains
    !--------------------------------------------------------------------
    ! allocate space for res_s and res_w: size = number of elements
    ! will be deallocated in main program
-   allocate (res_s(M),stat = allo_stat)
+   allocate (res_s(num_non_PML_elements),stat = allo_stat)
      call allocheck(log_unit, allo_stat, &
       "calculate_elemental_residuals: error allocating residual")
-      
-   allocate (res_w(M),stat = allo_stat)
+
+   allocate (res_w(num_non_PML_elements),stat = allo_stat)
      call allocheck(log_unit, allo_stat, &
       "calculate_elemental_residuals: error allocating residual")
    
@@ -95,20 +98,21 @@ contains
 
    !$OMP PARALLEL DO
    ! Loop over all elements
-    do mi = 1,M
+    do mi = 1,num_non_PML_elements
+      ni = non_PML_elements(mi)
 
      select case(GaussOrder)
      case(1)
        !print*, 'Gauss Order 1'
        ! calculate Gauss point of current element
-       Gausspoint = nd(el2nd(mi,1),:) * 0.25_dp + nd(el2nd(mi,2),:) &
-                                      * 0.25_dp + nd(el2nd(mi,3),:) &
-                                      * 0.25_dp + nd(el2nd(mi,4),:) &
+       Gausspoint = nd(el2nd(ni,1),:) * 0.25_dp + nd(el2nd(ni,2),:) &
+                                      * 0.25_dp + nd(el2nd(ni,3),:) &
+                                      * 0.25_dp + nd(el2nd(ni,4),:) &
                                       * 0.25_dp
-       ! Gauss weight = Ve(mi) for 1st order
+       ! Gauss weight = Ve(ni) for 1st order
 
        ! factor for residual equation
-       factor = cmplx(0.0_dp, (w/rho(mi)), kind=dp) * (-1.0_dp)
+       factor = (-1.0_dp) * k_0**2 * epsilon_r_eff(ni)
 
        ! initialise
        abs_res_s = 0.0_dp
@@ -127,8 +131,8 @@ contains
        do i = 1,6
        
          ! element to edge:
-         ! e = global edge ID of edge i of element mi
-         e = el2ed(mi,i)
+         ! e = global edge ID of edge i of element ni
+         e = el2ed(ni,i)
      
          ! S(e) = E field at current edge, Wg(e) = W at current edge
          ! Cg(e) = rhs of dual problem, Bg(e) = rhs of primal problem
@@ -138,28 +142,28 @@ contains
          aw = 1.0_dp / (Wg(e) + cmplx(10E-9, kind=dp))
 
          ! Calculate grad Lstart and grad Lend vectors
-         grad_Lstart = (/ b_start(mi,i), c_start(mi,i), d_start(mi,i) /)
+         grad_Lstart = (/ b_start(ni,i), c_start(ni,i), d_start(ni,i) /)
 
-         grad_Lend = (/ b_end(mi,i), c_end(mi,i), d_end(mi,i) /)
+         grad_Lend = (/ b_end(ni,i), c_end(ni,i), d_end(ni,i) /)
 
          ! Calculate Nedelec basis function for edge e
-         N = (((1/(6*Ve(mi)))**2)*(a_start(mi,i) + &
-                                   b_start(mi,i)*Gausspoint(1) + &
-                                   c_start(mi,i)*Gausspoint(2) + &
-                                   d_start(mi,i)*Gausspoint(3)) &
+         N = (((1/(6*Ve(ni)))**2)*(a_start(ni,i) + &
+                                   b_start(ni,i)*Gausspoint(1) + &
+                                   c_start(ni,i)*Gausspoint(2) + &
+                                   d_start(ni,i)*Gausspoint(3)) &
                                  *grad_Lend &
             
                    - &
             
-                   ((1/(6*Ve(mi)))**2)*(a_end(mi,i) + &
-                                        b_end(mi,i)*Gausspoint(1) + &
-                                        c_end(mi,i)*Gausspoint(2) + &
-                                        d_end(mi,i)*Gausspoint(3)) &
+                   ((1/(6*Ve(ni)))**2)*(a_end(ni,i) + &
+                                        b_end(ni,i)*Gausspoint(1) + &
+                                        c_end(ni,i)*Gausspoint(2) + &
+                                        d_end(ni,i)*Gausspoint(3)) &
                                       *grad_Lstart) &
             
-                   * el2edl(mi,i) &
+                   * el2edl(ni,i) &
 
-                   * ed_sign(mi,i)
+                   * ed_sign(ni,i)
 
          ! fields, rhs and weights (vectors) at Gauss point
          Gauss_S = Gauss_S + cmplx(N,kind=dp) * S(e)
@@ -188,8 +192,8 @@ contains
 
        ! squared residual for L2 norm times gauss weight for 
        ! the current element
-       res_s(mi) = abs(abs_res_s * abs_res_s)
-       res_w(mi) = abs(abs_res_w * abs_res_w)
+       res_s(ni) = abs(abs_res_s * abs_res_s)
+       res_w(ni) = abs(abs_res_w * abs_res_w)
 
 
      case(2)
@@ -198,29 +202,30 @@ contains
        ! calculate Gauss point of current element
        select case (ngp)
        case(1)
-        Gausspoint = nd(el2nd(mi,1),:) * 0.5585410197_dp + &
-                     nd(el2nd(mi,2),:) * 0.1381966011_dp + &
-                     nd(el2nd(mi,3),:) * 0.1381966011_dp + &
-                     nd(el2nd(mi,4),:) * 0.1381966011_dp
+        Gausspoint = nd(el2nd(ni,1),:) * 0.5585410197_dp + &
+                     nd(el2nd(ni,2),:) * 0.1381966011_dp + &
+                     nd(el2nd(ni,3),:) * 0.1381966011_dp + &
+                     nd(el2nd(ni,4),:) * 0.1381966011_dp
        case(2)
-        Gausspoint = nd(el2nd(mi,1),:) * 0.1381966011_dp + &
-                     nd(el2nd(mi,2),:) * 0.5585410197_dp + &
-                     nd(el2nd(mi,3),:) * 0.1381966011_dp + &
-                     nd(el2nd(mi,4),:) * 0.1381966011_dp
+        Gausspoint = nd(el2nd(ni,1),:) * 0.1381966011_dp + &
+                     nd(el2nd(ni,2),:) * 0.5585410197_dp + &
+                     nd(el2nd(ni,3),:) * 0.1381966011_dp + &
+                     nd(el2nd(ni,4),:) * 0.1381966011_dp
        case(3)
-        Gausspoint = nd(el2nd(mi,1),:) * 0.1381966011_dp + &
-                     nd(el2nd(mi,2),:) * 0.1381966011_dp + &
-                     nd(el2nd(mi,3),:) * 0.5585410197_dp + &
-                     nd(el2nd(mi,4),:) * 0.1381966011_dp
+        Gausspoint = nd(el2nd(ni,1),:) * 0.1381966011_dp + &
+                     nd(el2nd(ni,2),:) * 0.1381966011_dp + &
+                     nd(el2nd(ni,3),:) * 0.5585410197_dp + &
+                     nd(el2nd(ni,4),:) * 0.1381966011_dp
        case(4)
-        Gausspoint = nd(el2nd(mi,1),:) * 0.1381966011_dp + &
-                     nd(el2nd(mi,2),:) * 0.1381966011_dp + &
-                     nd(el2nd(mi,3),:) * 0.1381966011_dp + &
-                     nd(el2nd(mi,4),:) * 0.5585410197_dp
+        Gausspoint = nd(el2nd(ni,1),:) * 0.1381966011_dp + &
+                     nd(el2nd(ni,2),:) * 0.1381966011_dp + &
+                     nd(el2nd(ni,3),:) * 0.1381966011_dp + &
+                     nd(el2nd(ni,4),:) * 0.5585410197_dp
        end select
-       ! Gauss weight = Ve(mi)*0.25 for 2nd order
+       ! Gauss weight = Ve(ni)*0.25 for 2nd order
        ! factor for residual equation
-       factor = cmplx(0.0_dp, (w/rho(mi)), kind=dp) * (-1.0_dp)
+       !> @CS, changed in v1.2.0 for the new PDE
+       factor = (-1.0_dp) * k_0**2 * epsilon_r_eff(ni)
 
        ! initialise
        abs_res_s = 0.0_dp
@@ -239,8 +244,8 @@ contains
        do i = 1,6
        
          ! element to edge:
-         ! e = global edge ID of edge i of element mi
-         e = el2ed(mi,i)
+         ! e = global edge ID of edge i of element ni
+         e = el2ed(ni,i)
        
          ! S(e) = E field at current edge, Wg(e) = W at current edge
          ! Cg(e) = rhs of dual problem, Bg(e) = rhs of primal problem
@@ -250,28 +255,28 @@ contains
          aw = 1.0_dp / (Wg(e) + cmplx(10E-9, kind=dp))
 
          ! Calculate grad Lstart and grad Lend vectors
-         grad_Lstart = (/ b_start(mi,i), c_start(mi,i), d_start(mi,i) /)
+         grad_Lstart = (/ b_start(ni,i), c_start(ni,i), d_start(ni,i) /)
 
-         grad_Lend = (/ b_end(mi,i), c_end(mi,i), d_end(mi,i) /)
+         grad_Lend = (/ b_end(ni,i), c_end(ni,i), d_end(ni,i) /)
 
          ! Calculate Nedelec basis function for edge e
-         N = (((1/(6*Ve(mi)))**2)*(a_start(mi,i) + &
-                                   b_start(mi,i)*Gausspoint(1) + &
-                                   c_start(mi,i)*Gausspoint(2) + &
-                                   d_start(mi,i)*Gausspoint(3)) &
+         N = (((1/(6*Ve(ni)))**2)*(a_start(ni,i) + &
+                                   b_start(ni,i)*Gausspoint(1) + &
+                                   c_start(ni,i)*Gausspoint(2) + &
+                                   d_start(ni,i)*Gausspoint(3)) &
                                  *grad_Lend &
             
                    - &
             
-                   ((1/(6*Ve(mi)))**2)*(a_end(mi,i) + &
-                                        b_end(mi,i)*Gausspoint(1) + &
-                                        c_end(mi,i)*Gausspoint(2) + &
-                                        d_end(mi,i)*Gausspoint(3))&
+                   ((1/(6*Ve(ni)))**2)*(a_end(ni,i) + &
+                                        b_end(ni,i)*Gausspoint(1) + &
+                                        c_end(ni,i)*Gausspoint(2) + &
+                                        d_end(ni,i)*Gausspoint(3))&
                                       *grad_Lstart) &
             
-                   * el2edl(mi,i) &
+                   * el2edl(ni,i) &
 
-                   * ed_sign(mi,i)
+                   * ed_sign(ni,i)
 
          ! fields, rhs and weights (vectors) at Gauss point
          Gauss_S = Gauss_S + cmplx(N,kind=dp) * S(e)
@@ -301,8 +306,8 @@ contains
        ! squared residual for L2 norm times gauss weight
        ! for the current element
        ! summed over all four Gauss points
-       res_s(mi) = res_s(mi) + abs(abs_res_s * abs_res_s) * 0.25_dp
-       res_w(mi) = res_w(mi) + abs(abs_res_w * abs_res_w) * 0.25_dp
+       res_s(ni) = res_s(ni) + abs(abs_res_s * abs_res_s) * 0.25_dp
+       res_w(ni) = res_w(ni) + abs(abs_res_w * abs_res_w) * 0.25_dp
       end do ! gauss points
      end select
 
@@ -316,12 +321,13 @@ contains
   !---------------------------------------------------------------------
   !> @brief
   !> subroutine for calculating face jumps
+  !> changed in elfe3D_GPR, @CS: Adapting this for the new PDE
   !---------------------------------------------------------------------
   subroutine calculate_face_jumps (M, w, el2ed, el2nd, el2neigh, &
                                    el2edl, ed_sign, nd, &
                                    a_start, a_end, b_start, b_end, &
                                    c_start, c_end, d_start, d_end, &
-                                   rho, mu, Ve, S, Wg, &
+                                   epsilon_r_eff, mu, Ve, S, Wg, &
                                    fjJ_s, fjJ_w, fjH_s, fjH_w)
   
   
@@ -334,7 +340,8 @@ contains
                                                  b_start, b_end, &
                                                  c_start, c_end, &
                                                  d_start, d_end
-    real(kind=dp), dimension(:), intent(in) :: rho, mu, Ve
+    real(kind=dp), dimension(:), intent(in) :: mu, Ve
+    complex(kind=dp), dimension(:), intent(in) :: epsilon_r_eff
     complex (kind=dp), dimension(:), intent(in) :: S, Wg
 
     ! OUTPUT
@@ -348,6 +355,8 @@ contains
     integer :: i, j, l
     integer :: allo_stat
     integer :: elem1, elem2, no_ele
+    complex(kind=dp) :: jw
+    complex(kind=dp), dimension(M) :: chi
     real(kind=dp), dimension(3) :: p1, p2, p3 ! three nodes of triangle
     real(kind=dp) :: px, py, pz ! midpoint coordinates x,y,z of triangle
     real (kind=dp), dimension(3) :: face_normal
@@ -559,14 +568,15 @@ contains
 
           ! Calculate face jumps J with dot product for current face
           !factor = cmplx(0.0_dp, w, kind=dp) 
+          !@CS, changed in v1.2.0
+          jw = cmplx(0.0_dp, w, kind=dp)
+          chi = jw*epsilon_0*epsilon_r_eff
           fjJ_tmp_s = dot_product(cmplx(face_normal,kind=dp), &
-                                  cmplx(S1 * (1.0_dp/rho(elem1)) - &
-                                        S2 * (1.0_dp/rho(elem2)), &
-                                        kind=dp))      
+                                  (S1 * (chi(elem1)) - &
+                                   S2 * (chi(elem2))))      
           fjJ_tmp_w = dot_product(cmplx(face_normal,kind=dp), &
-                                  cmplx(W1 * (1.0_dp/rho(elem1)) - &
-                                        W2 * (1.0_dp/rho(elem2)), &
-                                        kind=dp))
+                                  (W1 * (chi(elem1)) - &
+                                   W2 * (chi(elem2))))
 
 
           ! Calculate face jumps H with cross product for current face
@@ -647,7 +657,6 @@ contains
   !> subroutine for computing error estimates for each element using 
   !> residuals and phase jumps J and H
   !---------------------------------------------------------------------
-
   subroutine compute_elemental_error_estimates (errorEst_method, M, &
                                                 res_s, res_w, &
                                                 fjJ_s, fjJ_w, &
@@ -685,12 +694,12 @@ contains
     eta_w = 0.0_dp
 
     ! test outputs
-    ! print *, 'Max primal elemental residual:', maxval(res_s)
-    ! print *, 'Max dual elemental residual:', maxval(res_w)
-    ! print *, 'Max primal face jump J:', maxval(fjJ_s)
-    ! print *, 'Max dual face jump J:', maxval(fjJ_w)
-    ! print *, 'Max primal face jump H:', maxval(fjH_s)
-    ! print *, 'Max dual face jump H:', maxval(fjH_w)
+    print *, 'Max primal elemental residual:', maxval(res_s)
+    print *, 'Max dual elemental residual:', maxval(res_w)
+    print *, 'Max primal face jump J:', maxval(fjJ_s)
+    print *, 'Max dual face jump J:', maxval(fjJ_w)
+    print *, 'Max primal face jump H:', maxval(fjH_s)
+    print *, 'Max dual face jump H:', maxval(fjH_w)
 
     select case(errorEst_method)
 
@@ -973,8 +982,8 @@ contains
    !--------------------------------------------------------------------
     h_tet = (sqrt(6.0_dp)/3.0_dp) * &
             ((12.0_dp/sqrt(2.0_dp)) * Ve_tet)**(1.0_dp/3.0_dp)
-   !--------------------------------------------------------------------
-   end subroutine tetr_height
+  !--------------------------------------------------------------------
+  end subroutine tetr_height
 
 
   !---------------------------------------------------------------------
@@ -989,7 +998,7 @@ contains
                                                    c_start, c_end, &
                                                    d_start, d_end, &
                                                    el2edl, ed_sign, &
-                                                   Ve, w, p, &
+                                                   Ve, k_0, p, &
                                                    midp_source, &
                                                    rec1_ed, infl_source)
   
@@ -1004,7 +1013,7 @@ contains
     real(kind=dp), dimension(:,:), intent(in) :: el2edl
     real(kind=dp), dimension(:,:), intent(in) :: ed_sign
     real(kind=dp), dimension(:), intent(in) :: Ve
-    real(kind=dp), intent(in) :: w,p
+    real(kind=dp), intent(in) :: k_0,p
     real(kind=dp), dimension(:), intent(in) :: midp_source
 
     ! OUTPUT
@@ -1036,7 +1045,7 @@ contains
                  (midp_source(3)-w1)**2.0_dp)
 
      ! Define identity vector (weighted)
-     II(:) = 1.0_dp * w * p * dist**3.0_dp
+     II(:) = 1.0_dp * k_0 * Z_0 * p * dist**3.0_dp
 
      ! Edge numbers of current receiver element
      ! call Write_Message &
@@ -1092,8 +1101,9 @@ contains
   !> @brief
   !> subroutine for writing .vtk files with error estimates for
   !> viewing in paraview
+  !> modified name in elfe3D_GPR, @CS: subroutine name for clarity
   !---------------------------------------------------------------------
-  subroutine write_vtk (M, refStep, StringStep, StringEnding, &
+  subroutine write_errors_vtk (M, refStep, StringStep, StringEnding, &
                         MeshFileName, errorEst, eta_s, eta_w, &
                         Ve, fjJ_s, fjJ_w, fjH_s, fjH_w)
   
@@ -1238,6 +1248,6 @@ contains
        close(unit=999)
     end if
   !---------------------------------------------------------------------
-  end subroutine write_vtk
+  end subroutine write_errors_vtk
 
 end module error_estimates

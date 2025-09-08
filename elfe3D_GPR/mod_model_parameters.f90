@@ -48,7 +48,7 @@ contains
   !> epsilon_r is now used!
   !---------------------------------------------------------------------
 
-  subroutine read_model_param (attr, M, rho, mu, epsilon)
+  subroutine read_model_param (attr, M, rho, mu, eps)
 
     ! INPUT
     integer, dimension(:), intent(in) :: attr
@@ -56,7 +56,7 @@ contains
     integer, intent(in) :: M
 
     ! OUTPUT
-    real(kind=dp), allocatable, dimension(:), intent(out) :: rho,mu, epsilon
+    real(kind=dp), allocatable, dimension(:), intent(out) :: rho,mu, eps
 
     ! LOCAL variables
     character(len=100) :: ModParaFileName
@@ -68,13 +68,13 @@ contains
     integer :: i, j, allo_stat
     !-------------------------------------------------------------------
     ! Allocate resistivity and magnetic permeability arrays
-    allocate (rho(M), mu(M), epsilon(M), stat = allo_stat)
+    allocate (rho(M), mu(M), eps(M), stat = allo_stat)
     call allocheck(log_unit, allo_stat, &
-                  "read_model_param: error allocating array rho and mu and epsilon")
+                  "read_model_param: error allocating array rho and mu and eps")
     ! initialise
     rho = 0.0_dp
     mu = 0.0_dp
-    epsilon = 0.0_dp
+    eps = 0.0_dp
 
     ! read region parameters from regionparameters.txt input file
     ModParaFileName = 'in/regionparameters.txt'
@@ -129,7 +129,7 @@ contains
           if (attr(i) .eq. region_attr(j)) then
             rho(i) = region_rho(j)
             mu(i) = mu_0 * region_mu_r(j)
-            epsilon(i) = epsilon_0 * region_epsilon_r(j)
+            eps(i) = epsilon_0 * region_epsilon_r(j)
           end if
         end do
       end do
@@ -139,7 +139,7 @@ contains
     ! Check if arrays contain NaN elements, are zero
     do i = 1,M
       if (rho(i) .ne. rho(i) .or. mu(i) .ne. mu(i) .or. &
-          epsilon(i) .ne. epsilon(i)) then
+          eps(i) .ne. eps(i)) then
         call Write_Message (log_unit, &
                        'model parameter arrays contain NaN elements!!!')
       else if (rho(i) .eq. 0.0_dp .or. mu(i) .eq. 0.0_dp) then
