@@ -7,6 +7,6 @@
 *.o
 *.mod
 *.vol
-*.txt
 *.h
-elfe3D/elfe3d
+out*
+data/*
