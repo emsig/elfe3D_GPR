@@ -11,3 +11,4 @@
 out*
 data/*
 empymod*
+!io/outputs/
