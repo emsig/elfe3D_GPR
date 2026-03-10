@@ -87,7 +87,8 @@ class SourceAntenna:
     def __post_init__(self) -> None:
         self._compute_frequency_list()
         self._compute_antenna_geometry()
-        self._compute_source_box()
+        if self.box_present:
+            self._compute_source_box()
 
     # ------------------------------------------------------------------
     # Frequency list — matches original logic exactly

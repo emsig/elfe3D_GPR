@@ -11,4 +11,6 @@
 out*
 data/*
 empymod*
+*.pyc
+
 !io/outputs/

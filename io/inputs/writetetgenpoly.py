@@ -127,11 +127,11 @@ class PolyAssembler:
         self.receivers_y_1_tet = receivers.y_1_tet
         self.receivers_z_tet  = receivers.z_tet
 
-        # Anomaly parameters (match original self.ax, self.ay, etc.)
-        self.ax    = anomaly.x
-        self.ay    = anomaly.y
-        self.az    = anomaly.z
-        self.a_mat = anomaly.properties
+        # Anomaly parameters (match original self.ax, self.ay, etc.) - only set when anomaly is present
+        self.ax    = anomaly.x          if anomaly is not None else None
+        self.ay    = anomaly.y          if anomaly is not None else None
+        self.az    = anomaly.z          if anomaly is not None else None
+        self.a_mat = anomaly.properties if anomaly is not None else None
 
         # Frequency list (for anomaly volume computation)
         self.f_list = source.f_list
@@ -227,16 +227,17 @@ class PolyAssembler:
         if self.box_present:
             self.node_list_source_box = node_list_source_box
 
-        # Anomaly box nodes (top and bottom face corners)
+        # Anomaly box nodes (top and bottom face corners) - only if anomaly present
         self.node_list_anomaly = []
-        nodes_an, self.num_node = create_rectangular_prism_nodes(
-            self.ax[0], self.ax[1], self.ay[0], self.ay[1], self.az[0], 101, self.num_node
-        )
-        self.node_list_anomaly.extend(nodes_an)
-        nodes_an, self.num_node = create_rectangular_prism_nodes(
-            self.ax[0], self.ax[1], self.ay[0], self.ay[1], self.az[1], 101, self.num_node
-        )
-        self.node_list_anomaly.extend(nodes_an)
+        if self.anomaly is not None:
+            nodes_an, self.num_node = create_rectangular_prism_nodes(
+                self.ax[0], self.ax[1], self.ay[0], self.ay[1], self.az[0], 101, self.num_node
+            )
+            self.node_list_anomaly.extend(nodes_an)
+            nodes_an, self.num_node = create_rectangular_prism_nodes(
+                self.ax[0], self.ax[1], self.ay[0], self.ay[1], self.az[1], 101, self.num_node
+            )
+            self.node_list_anomaly.extend(nodes_an)
 
         # PML nodes
         if self.NUM_PML > 0:
@@ -298,26 +299,29 @@ class PolyAssembler:
         z_layers = [self.layer_interfaces['z'][j] for j in range(self.num_layers)]
 
         # ── Type 2: lateral edge intersections ────────────────────────────────
+        # Only generated when there are layer interfaces to intersect.
+        # With num_layers=0, z_layers is empty so no type-2 nodes exist.
 
-        edge_configs = [
-            # (x_start, x_stop, y_start, y_stop, exclude_x, exclude_y)
-            (self.x_min, self.x_min - self.NUM_PML * t,  self.y_min, self.y_min - self.NUM_PML * t,  self.x_min, self.y_min),   # Front-Right
-            (self.x_max, self.x_max + self.NUM_PML * t,  self.y_min, self.y_min - self.NUM_PML * t,  self.x_max, self.y_min),   # Front-Left
-            (self.x_max, self.x_max + self.NUM_PML * t,  self.y_max, self.y_max + self.NUM_PML * t,  self.x_max, self.y_max),   # Back-Left
-            (self.x_min, self.x_min - self.NUM_PML * t,  self.y_max, self.y_max + self.NUM_PML * t,  self.x_min, self.y_max),   # Back-Right
-        ]
+        if z_layers:
+            edge_configs = [
+                # (x_start, x_stop, y_start, y_stop, exclude_x, exclude_y)
+                (self.x_min, self.x_min - self.NUM_PML * t,  self.y_min, self.y_min - self.NUM_PML * t,  self.x_min, self.y_min),   # Front-Right
+                (self.x_max, self.x_max + self.NUM_PML * t,  self.y_min, self.y_min - self.NUM_PML * t,  self.x_max, self.y_min),   # Front-Left
+                (self.x_max, self.x_max + self.NUM_PML * t,  self.y_max, self.y_max + self.NUM_PML * t,  self.x_max, self.y_max),   # Back-Left
+                (self.x_min, self.x_min - self.NUM_PML * t,  self.y_max, self.y_max + self.NUM_PML * t,  self.x_min, self.y_max),   # Back-Right
+            ]
 
-        for x_start, x_stop, y_start, y_stop, excl_x, excl_y in edge_configs:
-            x = np.linspace(x_start, x_stop, self.NUM_PML + 1)
-            y = np.linspace(y_start, y_stop, self.NUM_PML + 1)
-            xyz = np.array(np.meshgrid(x, y, z_layers)).T.reshape(-1, 3)
-            xyz = xyz[~((xyz[:, 0] == excl_x) & (xyz[:, 1] == excl_y))]
+            for x_start, x_stop, y_start, y_stop, excl_x, excl_y in edge_configs:
+                x = np.linspace(x_start, x_stop, self.NUM_PML + 1)
+                y = np.linspace(y_start, y_stop, self.NUM_PML + 1)
+                xyz = np.array(np.meshgrid(x, y, z_layers)).T.reshape(-1, 3)
+                xyz = xyz[~((xyz[:, 0] == excl_x) & (xyz[:, 1] == excl_y))]
 
-            for xi, yi, zi in xyz:
-                self.num_node += 1
-                node = Node(self.num_node, xi, yi, zi, marker_pml_layers[0] + self.marker_pml_types[1])
-                pml_type_2_layer_nodes.append(node)
-                pml_type_2_nodes.append(node)
+                for xi, yi, zi in xyz:
+                    self.num_node += 1
+                    node = Node(self.num_node, xi, yi, zi, marker_pml_layers[0] + self.marker_pml_types[1])
+                    pml_type_2_layer_nodes.append(node)
+                    pml_type_2_nodes.append(node)
 
         # ── Type 3: corner cubes ───────────────────────────────────────────────
 
@@ -360,7 +364,11 @@ class PolyAssembler:
 
         # ── Earth layer regions ─────────────────────────────────────────────
         for i in range(self.num_layers + 1):
-            if i == 0:
+            if self.num_layers == 0:
+                # Air only — single region occupies full domain depth
+                region_height = (self.z_min + self.z_max) / 2.0
+                r_label = "# Air"
+            elif i == 0:
                 region_height = (
                     self.layer_interfaces['z'][0]
                     + abs(self.layer_interfaces['z'][0] - self.z_max) / 2.0
@@ -425,13 +433,14 @@ class PolyAssembler:
         self.regions = regions
 
         # ── Anomaly region ──────────────────────────────────────────────────
-        self.num_regions += 1
-        an_vol = self.anomaly.compute_max_element_volume(self.f_list[0])
-        self.regions.append([
-            self.num_regions, 0, 0, self.anomaly.z_midpoint,
-            self.num_regions, an_vol, "# Anomaly Region",
-            self.anomaly.rho, self.anomaly.mu_r, self.anomaly.eps_r,
-        ])
+        if self.anomaly is not None:
+            self.num_regions += 1
+            an_vol = self.anomaly.compute_max_element_volume(self.f_list[0])
+            self.regions.append([
+                self.num_regions, 0, 0, self.anomaly.z_midpoint,
+                self.num_regions, an_vol, "# Anomaly Region",
+                self.anomaly.rho, self.anomaly.mu_r, self.anomaly.eps_r,
+            ])
 
         # ── PML regions ─────────────────────────────────────────────────────
         if self.NUM_PML > 0:
@@ -559,7 +568,10 @@ class PolyAssembler:
 
         for region in PML_regions:
             mz = region[3]
-            if mz >= interfaces[0]:
+            if num_layers == 0:
+                # Air only — all PML regions inherit air material
+                mat_idx = 0
+            elif mz >= interfaces[0]:
                 mat_idx = 0
             elif mz < interfaces[-1]:
                 mat_idx = num_layers
@@ -647,13 +659,15 @@ class PolyAssembler:
                 self.num_facet += 1
 
         # ── Anomaly facets ────────────────────────────────────────────────
-        an_faces = create_cuboid_faces_from_nodes(self.node_list_anomaly)
-        self.anomaly_string = "\n# anomaly facet\n"
-        self.marker_anomaly = 101
-        for face in an_faces:
-            self.num_facet += 1
-            self.anomaly_string += f"1 0 {self.marker_anomaly}\n"
-            self.anomaly_string += "4 " + " ".join(map(str, [node[0] for node in face])) + "\n"
+        self.anomaly_string = ""
+        if self.anomaly is not None:
+            an_faces = create_cuboid_faces_from_nodes(self.node_list_anomaly)
+            self.anomaly_string = "\n# anomaly facet\n"
+            self.marker_anomaly = 101
+            for face in an_faces:
+                self.num_facet += 1
+                self.anomaly_string += f"1 0 {self.marker_anomaly}\n"
+                self.anomaly_string += "4 " + " ".join(map(str, [node[0] for node in face])) + "\n"
 
         # ── PML facets ────────────────────────────────────────────────────
         if self.NUM_PML > 0:
@@ -692,7 +706,7 @@ class PolyAssembler:
         right  = domain_side_face("right",  self.x_max, 1, 2, 3)
         back   = domain_side_face("back",   self.y_max, 2, 1, 3)
         left   = domain_side_face("left",   self.x_min, 1, 2, 3)
-        top    = domain_horizontal_face("top and bottom", self.z_min)
+        top    = domain_horizontal_face("top", self.z_min)
         bottom = domain_horizontal_face("bottom",         self.z_max)
 
         return (
@@ -797,9 +811,11 @@ class PolyAssembler:
             )
             self.source_string = ""
 
-        # After consuming the air-earth interface, remove it from the remaining list
+        # After consuming the air-earth interface, remove it from the remaining list.
+        # _old is always initialised here so downstream code can reference it safely
+        # even when num_layers=0 (in which case both lists stay empty).
+        self.node_list_of_list_of_interfaces_old = self.node_list_of_list_of_interfaces
         if self.num_layers > 0:
-            self.node_list_of_list_of_interfaces_old = self.node_list_of_list_of_interfaces
             self.node_list_of_list_of_interfaces = self.node_list_of_list_of_interfaces[1:]
 
     def _evaluate_all_facets_pml(self) -> None:
@@ -912,7 +928,7 @@ class PolyAssembler:
                 marker = self.marker_pml_1[i*6 + face]
                 for new_face in range(len(face_sorting_settings)): 
                     self.num_facet += 1
-                    self.pml_string += self.create_face_string(marker, pml_type_1_faces_nodes_list[face][0], pml_type_1_interfaces_nodes_list[face][0], *face_sorting_settings[new_face])
+                    self.pml_string += create_face_string(marker, pml_type_1_faces_nodes_list[face][0], pml_type_1_interfaces_nodes_list[face][0], *face_sorting_settings[new_face])
                 
         # __________________________________________________________
         # Create 12 cuboids at each edge of the domain - Type 2
@@ -1098,7 +1114,7 @@ class PolyAssembler:
                         marker = self.marker_pml_2[edge]
                     marker_list.append(marker)
                 all_face_strings = [
-                    self.create_face_string(marker_list[i], pml_type_2_faces_nodes_list[edge][0], pml_type_2_interfaces_nodes_list[edge][0], *edge_sorting_settings[i])
+                    create_face_string(marker_list[i], pml_type_2_faces_nodes_list[edge][0], pml_type_2_interfaces_nodes_list[edge][0], *edge_sorting_settings[i])
                     for i in range(len(edge_sorting_settings))
                 ]
                 unique_face_strings = list(set(all_face_strings))
@@ -1106,14 +1122,14 @@ class PolyAssembler:
                     self.num_facet += 1
                     self.pml_string += face_str
                     all_face_strings = [
-                        self.create_face_string(marker, pml_type_2_faces_nodes_list[edge][0], pml_type_2_interfaces_nodes_list[edge][0], axis_value, axis_index, sort_axis_1, sort_axis_2)
+                        create_face_string(marker, pml_type_2_faces_nodes_list[edge][0], pml_type_2_interfaces_nodes_list[edge][0], axis_value, axis_index, sort_axis_1, sort_axis_2)
                         for axis_value, axis_index, sort_axis_1, sort_axis_2 in edge_sorting_settings
                     ]
             else:
                 marker = self.marker_pml_2[edge] 
                 all_component_strings = []
                 for new_face in range(len(edge_sorting_settings)):
-                    face_string = self.create_face_string(
+                    face_string = create_face_string(
                         marker, 
                         pml_type_2_faces_nodes_list[edge][0], 
                         pml_type_2_interfaces_nodes_list[edge][0], 
@@ -1160,7 +1176,7 @@ class PolyAssembler:
         all_cuboid_faces = []
         not_needed_nodes = [n for _, n, _ in all_vertex_filters]
         for i in range(len(pml_type_3_faces_nodes_list)):
-            faces = self.create_half_cuboid_faces_from_nodes(pml_type_3_faces_nodes_list[i][0], not_needed_nodes[i])
+            faces = create_half_cuboid_faces_from_nodes(pml_type_3_faces_nodes_list[i][0], not_needed_nodes[i])
             all_cuboid_faces.append(faces)
 
         # Remove duplicates from all_cuboid_faces
@@ -1229,18 +1245,19 @@ class PolyAssembler:
                     f.write(f"{node[0]} {round(node[1],5)} {round(node[2],5)} {round(node[3],5)} {node[4]}\n")
                 f.write("\n")
 
-            f.write("# Anomaly nodes\n")
-            for node in self.node_list_anomaly:
-                f.write(f"{node[0]} {round(node[1],5)} {round(node[2],5)} {round(node[3],5)} {node[4]}\n")
-            f.write("\n")
+            if self.anomaly is not None:
+                f.write("# Anomaly nodes\n")
+                for node in self.node_list_anomaly:
+                    f.write(f"{node[0]} {round(node[1],5)} {round(node[2],5)} {round(node[3],5)} {node[4]}\n")
+                f.write("\n")
 
             if self.NUM_PML > 0:
                 f.write("# PML nodes for n PML Layers\n")
-                f.write("# Type 2 Interface Intersections\n")
+                f.write("# Type 2 Interface Intersections: Count Per Lateral Edge: num_interfaces*(n+1)^2 - num_interfaces\n")
                 for node in self.node_list_PML_2:
                     f.write(f"{node[0]} {node[1]} {node[2]} {node[3]} {node[4]}\n")
                 f.write("\n")
-                f.write("# Type 3: Corner Cubes\n")
+                f.write("# Type 3: Corner Cubes: Count Per Corner: (n+1)^3 - 1\n")
                 for node in self.node_list_PML_3:
                     f.write(f"{node[0]} {node[1]} {node[2]} {node[3]} {node[4]}\n")
                 f.write("\n")

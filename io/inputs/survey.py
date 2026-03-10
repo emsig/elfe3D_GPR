@@ -24,7 +24,6 @@ Or step by step:
     survey.generate()
 """
 
-import warnings
 import numpy as np
 from pathlib import Path
 from dataclasses import dataclass, field
@@ -341,7 +340,8 @@ class GPRSurvey:
         )
 
         print(f"Source antenna length: {source.length} m")
-        print(f"Source antenna box extents: {source.box_x} {source.box_y} {source.box_z}")
+        if box_present:
+            print(f"Source antenna box extents: {source.box_x} {source.box_y} {source.box_z}")
 
         # ── Receivers ────────────────────────────────────────────────
         receivers = ReceiverArray(
@@ -364,19 +364,6 @@ class GPRSurvey:
                 z=anomaly_z,
                 properties=anomaly_properties,
             )
-        else:
-            # No anomaly — create a tiny dummy far outside the domain
-            # so the assembler always has something to work with.
-            # The dummy region will not affect the mesh because it is
-            # placed well outside the domain bounds.
-            anomaly = cls._make_dummy_anomaly(domain)
-            warnings.warn(
-                "No anomaly defined. A dummy anomaly has been placed outside "
-                "the domain. Its region will appear in the .poly file but "
-                "will not influence the mesh or solution.",
-                UserWarning,
-                stacklevel=2,
-            )
 
         # ── IO paths ─────────────────────────────────────────────────
         io = IOConfig(
@@ -393,26 +380,6 @@ class GPRSurvey:
             pml=pml,
             io=io,
             anomaly=anomaly,
-        )
-
-    # ------------------------------------------------------------------
-    # Dummy anomaly for the no-anomaly case
-    # ------------------------------------------------------------------
-
-    @staticmethod
-    def _make_dummy_anomaly(domain: ModelDomain) -> BoxAnomaly:
-        """
-        A placeholder anomaly placed 10x the domain size outside the domain.
-        TetGen will create a region seed for it but no mesh refinement
-        will occur because it is outside all facets.
-        """
-        offset = 10.0 * max(domain.x_size, domain.y_size, domain.z_size)
-        x0 = domain.x_max + offset
-        return BoxAnomaly(
-            x=(x0,        x0 + 0.01),
-            y=(0.0,        0.01),
-            z=(-0.01,      0.0),
-            properties=(1.0, 1e-16, 1.0, 0.0),
         )
 
     # ------------------------------------------------------------------
