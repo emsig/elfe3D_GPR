@@ -36,6 +36,12 @@ from receivers import ReceiverArray
 from anomalies import BoxAnomaly
 from pml import PMLConfig
 
+# Coordinate precision used throughout all file output.
+_COORD_DIGITS = 6
+
+def _r(x: float) -> float:
+    """Round a coordinate to the standard output precision."""
+    return round(float(x), _COORD_DIGITS)
 
 class PolyAssembler:
     """
@@ -1214,7 +1220,7 @@ class PolyAssembler:
 
             f.write("# Points for cube (domain)\n")
             for node in self.node_list_domain_prism:
-                f.write(f"{node[0]} {node[1]} {node[2]} {node[3]} {node[4]}\n")
+                f.write(f"{node[0]} {_r(node[1])} {_r(node[2])} {_r(node[3])} {node[4]}\n")
             f.write("\n")
 
             f.write("# Layers\n")
@@ -1223,43 +1229,43 @@ class PolyAssembler:
                 label = "# interface air-earth" if layer == 0 else f"# interface layer {layer-1}"
                 f.write(label + "\n")
                 for node in node_list_interface:
-                    f.write(f"{node[0]} {node[1]} {node[2]} {node[3]} {node[4]}\n")
+                    f.write(f"{node[0]} {_r(node[1])} {_r(node[2])} {_r(node[3])} {node[4]}\n")
                 f.write("\n")
             f.write("\n")
 
             f.write("# receivers\n")
             for i, node in enumerate(self.node_list_receiver):
-                f.write(f"{node[0]} {round(node[1],5)} {round(node[2],5)} {round(node[3],5)} {node[4]}\n")
+                f.write(f"{node[0]} {_r(node[1])} {_r(node[2])} {_r(node[3])} {node[4]}\n")
                 if (i + 1) % 3 == 0:
                     f.write("\n")
             f.write("\n")
 
             f.write("# source nodes\n")
             for node in self.node_list_source:
-                f.write(f"{node[0]} {round(node[1],5)} {round(node[2],5)} {round(node[3],5)} {node[4]}\n")
+                f.write(f"{node[0]} {_r(node[1])} {_r(node[2])} {_r(node[3])} {node[4]}\n")
             f.write("\n")
 
             if self.box_present:
                 f.write("# source box nodes\n")
                 for node in self.node_list_source_box:
-                    f.write(f"{node[0]} {round(node[1],5)} {round(node[2],5)} {round(node[3],5)} {node[4]}\n")
+                    f.write(f"{node[0]} {_r(node[1])} {_r(node[2])} {_r(node[3])} {node[4]}\n")
                 f.write("\n")
 
             if self.anomaly is not None:
                 f.write("# Anomaly nodes\n")
                 for node in self.node_list_anomaly:
-                    f.write(f"{node[0]} {round(node[1],5)} {round(node[2],5)} {round(node[3],5)} {node[4]}\n")
+                    f.write(f"{node[0]} {_r(node[1])} {_r(node[2])} {_r(node[3])} {node[4]}\n")
                 f.write("\n")
 
             if self.NUM_PML > 0:
                 f.write("# PML nodes for n PML Layers\n")
                 f.write("# Type 2 Interface Intersections: Count Per Lateral Edge: num_interfaces*(n+1)^2 - num_interfaces\n")
                 for node in self.node_list_PML_2:
-                    f.write(f"{node[0]} {node[1]} {node[2]} {node[3]} {node[4]}\n")
+                    f.write(f"{node[0]} {_r(node[1])} {_r(node[2])} {_r(node[3])} {node[4]}\n")
                 f.write("\n")
                 f.write("# Type 3: Corner Cubes: Count Per Corner: (n+1)^3 - 1\n")
                 for node in self.node_list_PML_3:
-                    f.write(f"{node[0]} {node[1]} {node[2]} {node[3]} {node[4]}\n")
+                    f.write(f"{node[0]} {_r(node[1])} {_r(node[2])} {_r(node[3])} {node[4]}\n")
                 f.write("\n")
 
             # Part 2 — Facet list
@@ -1292,6 +1298,6 @@ class PolyAssembler:
             f.write(f"{self.num_regions}\n")
             for region in self.regions:
                 f.write(
-                    f"{region[0]} {region[1]} {region[2]} {region[3]} "
+                    f"{region[0]} {_r(region[1])} {_r(region[2])} {_r(region[3])} "
                     f"{region[4]} {region[5]} {region[6]} \n"
                 )

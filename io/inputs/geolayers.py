@@ -13,7 +13,6 @@ The z-interface computation preserves the original logic exactly:
 
 import numpy as np
 from dataclasses import dataclass, field
-
 from materials import Material
 
 

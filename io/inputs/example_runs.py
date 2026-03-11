@@ -7,13 +7,12 @@ Usage examples for GPRSurvey showing all combinations:
   Case 2 — Layered earth, no anomaly  (num_layers=2, anomaly=None)
   Case 3 — Layered earth + anomaly    (num_layers=2, anomaly=BoxAnomaly)
 
-These replicate the original notebook test case structure.
 """
 
 import numpy as np
 from survey import GPRSurvey
 
-# ── Shared frequency / wavelength setup (matches original notebook) ──────────
+# Shared frequency / wavelength setup
 
 f = 100e6                   # 100 MHz central frequency
 wave = 3e8 / f              # free-space wavelength in air = 3.0 m
@@ -29,12 +28,12 @@ survey_air = GPRSurvey.build(
     # Domain
     x_e=[-wave/10, 1 + wave/10],
     y_e=[-wave/10, wave/10],
-    z_e=[-wave/10/3, wave/10],
+    z_e=[-wave/10, wave/10],
 
     # Materials — air only, no earth layers
     air_eps_r=1.0,
     air_sigma=1e-16,
-    layer_thicknesses=[],           # no earth layers
+    layer_thicknesses=[], # no earth layers
     layer_eps_r=[],
     layer_sigma=[],
 
@@ -47,7 +46,7 @@ survey_air = GPRSurvey.build(
     source_type=6,
     current_direction=1,
     num_segments=1,
-    s_f=500,
+    s_f=250,
     bh_f=1.0,
     box_present=False,
     box_x=[-1.0, 1.0],
@@ -107,7 +106,7 @@ survey_layered = GPRSurvey.build(
     source_type=6,
     current_direction=1,
     num_segments=1,
-    s_f=500,
+    s_f=250,
     bh_f=1.0,
     box_present=False,
     box_x=[-1 + 0.75, 1 + 0.375],
@@ -136,9 +135,9 @@ survey_layered = GPRSurvey.build(
 survey_layered.generate()
 
 
-# =============================================================================
-# Case 3: Two earth layers + anomaly  (matches original notebook exactly)
-# =============================================================================
+# ==================================
+# Case 3: Two earth layers + anomaly
+# ==================================
 
 survey_anomaly = GPRSurvey.build(
     experiment_name="AnAir",
@@ -170,7 +169,7 @@ survey_anomaly = GPRSurvey.build(
     source_type=6,
     current_direction=1,
     num_segments=1,
-    s_f=500,
+    s_f=250,
     bh_f=1.0,
     box_present=False,
     box_x=[-1 + 0.75, 1 + 0.375],

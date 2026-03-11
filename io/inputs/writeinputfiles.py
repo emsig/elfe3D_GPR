@@ -27,6 +27,13 @@ from solver import SolverConfig
 from pml import PMLConfig
 
 
+_COORD_DIGITS = 6
+
+def _r(x: float) -> float:
+    """Round a coordinate to standard output precision (6 decimal places)."""
+    return round(float(x), _COORD_DIGITS)
+
+
 class FEMInputWriter:
     """
     Writes the elfe3D FEM input files from assembled domain objects.
@@ -121,8 +128,8 @@ class FEMInputWriter:
         with open(self.base_input_file, 'w') as f:
             f.write(f"solver                  {sc.solver}\n")
             f.write("model_size\n")
-            f.write(f"{self.domain.x_min - pml_buff}\t{self.domain.y_min - pml_buff}\t{self.domain.z_min - pml_buff}\n")
-            f.write(f"{self.domain.x_max + pml_buff}\t{self.domain.y_max + pml_buff}\t{self.domain.z_max + pml_buff}\n")
+            f.write(f"{_r(self.domain.x_min - pml_buff)}\t{_r(self.domain.y_min - pml_buff)}\t{_r(self.domain.z_min - pml_buff)}\n")
+            f.write(f"{_r(self.domain.x_max + pml_buff)}\t{_r(self.domain.y_max + pml_buff)}\t{_r(self.domain.z_max + pml_buff)}\n")
 
             f.write(f"num_freq                {len(self.source.f_list)}\n")
             for freq in self.source.f_list:
@@ -130,13 +137,13 @@ class FEMInputWriter:
 
             f.write(f"num_rec                 {self.receivers.num_receivers}\n")
             for x, y, z in zip(self.receivers.x, self.receivers.y, self.receivers.z):
-                f.write(f"{round(x, 5)} {round(y, 5)} {z}\n")
+                f.write(f"{_r(x)} {_r(y)} {_r(z)}\n")
 
             f.write(f"output_E_file           {self.output_E_file}\n")
             f.write(f"output_H_file           {self.output_H_file}\n")
             f.write(f"source_type             {self.source.source_type}\n")
-            f.write(f"{round(self.source.x_extents[0], 5)} {round(self.source.y_extents[0], 5)} {round(self.source.z_extents[0], 5)}\n")
-            f.write(f"{round(self.source.x_extents[1], 5)} {round(self.source.y_extents[1], 5)} {round(self.source.z_extents[1], 5)}\n")
+            f.write(f"{_r(self.source.x_extents[0])} {_r(self.source.y_extents[0])} {_r(self.source.z_extents[0])}\n")
+            f.write(f"{_r(self.source.x_extents[1])} {_r(self.source.y_extents[1])} {_r(self.source.z_extents[1])}\n")
             f.write(f"current_direction       {self.source.current_direction}\n")
             f.write(f"source_moment           {self.source.source_moment}\n")
             f.write(f"PEC_present             {0}\n")
@@ -169,9 +176,9 @@ class FEMInputWriter:
             f.write(f"{2}\n")
             for i in range(2):
                 f.write(
-                    f"{round(self.source.x_extents[i], 6)} "
-                    f"{self.source.y_extents[i]} "
-                    f"{self.source.z_extents[i]}\n"
+                    f"{_r(self.source.x_extents[i])} "
+                    f"{_r(self.source.y_extents[i])} "
+                    f"{_r(self.source.z_extents[i])}\n"
                 )
         return self.source_file
 
