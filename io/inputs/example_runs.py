@@ -33,9 +33,11 @@ survey_air = GPRSurvey.build(
     # Materials — air only, no earth layers
     air_eps_r=1.0,
     air_sigma=1e-16,
-    layer_thicknesses=[], # no earth layers
-    layer_eps_r=[],
-    layer_sigma=[],
+    layer_thicknesses=[wave/10], # creating this layer at the middle of the domain for ease of whole-space model PML setup. Unfortunately, the current implementation of the layered media requires at least one layer to be defined.
+    layer_eps_r=[1.0], # same as air
+    layer_sigma=[1e-16], # same as air
+    layer_mu_r=[1.0], # same as air
+    layer_sigma_m=[0.0], # same as air
 
     # No anomaly — omit anomaly_x/y/z entirely
 
