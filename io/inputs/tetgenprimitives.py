@@ -138,8 +138,6 @@ def angular_sort(nodes: list, center_axis_1: int, center_axis_2: int) -> list[in
 
     Returns a list of node indices (node[0]) in angular order, starting
     from the node with the smallest index.
-
-    Preserved exactly from the original.
     """
     center_x = sum(node[center_axis_1] for node in nodes) / len(nodes)
     center_z = sum(node[center_axis_2] for node in nodes) / len(nodes)
@@ -200,8 +198,6 @@ def create_face_string(
 
     Used for PML Type-1 and Type-2 faces. The facet may include
     polygon holes (interface lines) if interfaces_nodes is provided.
-
-    Preserved exactly from original create_face_string().
     """
     face_nodes_list = get_face_nodes(
         node_list=nodes,
@@ -266,8 +262,6 @@ def create_cuboid_faces_from_nodes(nodes: list, tol: float = 1e-6) -> list[list]
 
     Nodes are grouped by y-coordinate into top and bottom faces, then
     lateral faces are built from corresponding edges.
-
-    Preserved exactly from original.
     """
     groups = {}
     for node in nodes:
@@ -323,8 +317,6 @@ def create_half_cuboid_faces_from_nodes(
     share a face with the main domain).
 
     not_needed_node : (x, y, z) tuple of the corner to exclude.
-
-    Preserved exactly from original.
     """
     faces = create_cuboid_faces_from_nodes(nodes, tol=tol)
 

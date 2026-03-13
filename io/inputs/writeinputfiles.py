@@ -9,9 +9,6 @@ FEMInputWriter takes the assembled domain objects and writes:
   - regionparameters.txt (material properties per region attribute)
 
 The .poly file is handled separately by PolyAssembler in writetetgenpoly.py.
-
-All file format logic preserved exactly from the original
-elfe3DGPRTestWritingPML class.
 """
 
 import os
@@ -120,7 +117,6 @@ class FEMInputWriter:
     def write_base_input_file(self) -> Path:
         """
         Write the main elfe3D_input.txt file.
-        Preserved exactly from original write_base_input_file().
         """
         pml_buff = self.pml.total_thickness
         sc = self.solver_cfg
@@ -170,7 +166,6 @@ class FEMInputWriter:
     def write_source_file(self) -> Path:
         """
         Write the source segment coordinate file.
-        Preserved exactly from original write_source_file().
         """
         with open(self.source_file, 'w') as f:
             f.write(f"{2}\n")
@@ -189,7 +184,6 @@ class FEMInputWriter:
     def write_region_params_file(self, regions: list) -> Path:
         """
         Write the region electromagnetic parameters file.
-        Preserved exactly from original write_region_params_file().
 
         Parameters
         ----------

@@ -6,8 +6,6 @@ Receiver antenna array definition and tetrahedra node geometry.
 ReceiverArray computes inline, endfire, and oblique receiver positions
 along with the three-node equilateral triangle tetrahedra vertices used
 to embed receivers in the TetGen mesh.
-
-All geometry logic preserved exactly from the original elfe3DGPRTestDesign.
 """
 
 import numpy as np
@@ -96,7 +94,7 @@ class ReceiverArray:
         return len(self.x)
 
     # ------------------------------------------------------------------
-    # PML buffer (used for placement bounds, preserved from original)
+    # PML buffer (used for placement bounds)
     # ------------------------------------------------------------------
 
     @property
@@ -107,7 +105,6 @@ class ReceiverArray:
 
     # ------------------------------------------------------------------
     # Per-orientation position computation
-    # All logic preserved exactly from original elfe3DGPRTestDesign
     # ------------------------------------------------------------------
 
     def _compute_inline(self) -> dict:

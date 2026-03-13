@@ -10,9 +10,6 @@ all derived quantities used by the assembler:
   - discretised segment positions
   - source refinement box extents
 
-All computations preserve the original logic exactly; they are just
-moved from the monolithic __init__ of elfe3DGPRTestDesign into
-__post_init__ here.
 """
 
 import numpy as np

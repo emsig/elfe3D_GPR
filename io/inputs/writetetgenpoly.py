@@ -6,12 +6,6 @@ Assembles and writes the TetGen .poly input file.
 PolyAssembler takes all domain objects (layers, source, receivers, anomaly,
 PML) and runs the three assembly passes — nodes, regions, facets — then
 writes the .poly file.
-
-All geometry and math logic is preserved exactly from the original
-elfe3DGPRTestWritingPML class. Only the structure is changed:
-  - Data comes from typed dataclass objects instead of flat dicts
-  - Node/facet/region assembly methods are clearly separated
-  - Helper geometry functions are imported from tetgenprimitives.py
 """
 
 import os
@@ -166,7 +160,7 @@ class PolyAssembler:
         return path
 
     # ==========================================================================
-    # Node assembly — preserved exactly from original evaluate_all_nodes()
+    # Node assembly
     # ==========================================================================
 
     def evaluate_all_nodes(self) -> None:
@@ -254,7 +248,6 @@ class PolyAssembler:
     def _build_source_box_nodes(self) -> list:
         """
         Build source refinement box nodes.
-        Preserved exactly from original evaluate_all_nodes().
         """
         node_list_source_box = []
 
@@ -290,8 +283,6 @@ class PolyAssembler:
         Evaluate nodes for all PML shells.
         Type 2: lateral edge extensions (intersection of two PML faces)
         Type 3: corner cube extensions (intersection of three PML faces)
-
-        Preserved exactly from original evaluate_all_nodes_PML().
         """
         t = self.pml_thickness
         marker_pml_layers = [1000 for _ in range(self.NUM_PML)]
@@ -357,7 +348,7 @@ class PolyAssembler:
         return pml_type_2_nodes, pml_type_3_nodes, pml_type_2_layer_nodes
 
     # ==========================================================================
-    # Region assembly — preserved exactly from original evaluate_all_regions()
+    # Region assembly
     # ==========================================================================
 
     def evaluate_all_regions(self) -> None:
@@ -457,8 +448,6 @@ class PolyAssembler:
         """
         Evaluate PML region seed points for all three PML types.
         Material properties are assigned by z-midpoint lookup.
-
-        Preserved exactly from original evaluate_all_regions_PML().
         """
         if self.num_layers > 0:
             all_z = sorted([self.z_min] + self.layer_interfaces['z'] + [self.z_max])
@@ -599,9 +588,7 @@ class PolyAssembler:
         return PML_regions
 
     # ==========================================================================
-    # Facet assembly — preserved exactly from original evaluate_all_facets()
-    # The facet methods are long; they are preserved in full without changes
-    # to the polygon construction logic.
+    # Facet assembly
     # ==========================================================================
 
     def evaluate_all_facets(self) -> None:
@@ -755,8 +742,6 @@ class PolyAssembler:
         """
         Build the combined air-earth interface facet string (with receivers
         and optionally source box z=0 faces and source dipole segment).
-
-        Preserved exactly from original evaluate_all_facets().
         """
         source_above_surface = any(node[3] > 0.0 for node in self.node_list_source)
 
@@ -827,10 +812,8 @@ class PolyAssembler:
     def _evaluate_all_facets_pml(self) -> None:
         """
         Build TetGen .poly facet strings for PML Type-1, Type-2, and Type-3 shells.
-        Preserved exactly from original evaluate_all_facets_PML().
         """
-        # This method is intentionally long — it preserves the full PML facet
-        # logic from the original without any mathematical changes.
+        # This method is intentionally long.
         # See the original elfe3DGPRTestWritingPMLOAn.py evaluate_all_facets_PML()
         # for the authoritative version. Refactoring of the internal PML facet
         # loop structure can be done separately once the overall structure is stable.

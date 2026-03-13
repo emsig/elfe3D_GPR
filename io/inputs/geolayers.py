@@ -6,7 +6,7 @@ Geological layer definitions and the layer stack that manages them.
 GeoLayer  — a single horizontal layer with thickness and material.
 LayerStack — ordered collection (air + earth layers), computes z-interfaces.
 
-The z-interface computation preserves the original logic exactly:
+The z-interface computation is based on the following logic:
     z[0] = 0.0  (air-earth surface)
     z[i] = -cumulative sum of thicknesses up to layer i
 """
@@ -97,7 +97,7 @@ class LayerStack:
         Z-coordinates of all layer interfaces, including the air-earth
         boundary at z = 0.
 
-        Preserves original logic:
+        Logic:
             z[0] = 0.0
             z[i] = -sum(thicknesses[0:i])   for i = 1 .. num_layers-1
 
