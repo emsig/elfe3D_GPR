@@ -63,7 +63,7 @@ class IOConfig:
 
     @property
     def input_dir(self) -> Path:
-        return self.base_dir / f"in_{self.experiment_name}"
+        return self.base_dir / f"in"
 
     @property
     def output_dir(self) -> Path:
