@@ -146,7 +146,7 @@ def run_solver(paths: ProjectPaths, survey) -> None:
     """
     Run the elfe3d_gpr FEM solver.
 
-    Runs from survey.io.input_dir so the exe finds elfe3D_input.txt in its
+    Runs from survey.io.base_dir so the exe finds elfe3D_input.txt in its
     working directory — no file copying needed.  The exe is called by its
     absolute WSL path.
 
@@ -154,7 +154,7 @@ def run_solver(paths: ProjectPaths, survey) -> None:
 
     Output is streamed line-by-line.  Raises RuntimeError on failure.
     """
-    input_dir = paths.to_wsl(survey.io.input_dir)
+    input_dir = paths.to_wsl(survey.io.base_dir)
     exe_path  = paths.to_wsl(paths.exec_path())
     bash_cmd  = f"cd {input_dir} && {exe_path}"
     cmd       = ["wsl", "bash", "-c", bash_cmd]

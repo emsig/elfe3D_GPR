@@ -76,15 +76,15 @@ class IOConfig:
     @property
     def model_file_stem(self) -> str:
         """Path written into elfe3D_input.txt for the mesh file (no extension)."""
-        return str(self.input_dir / f"in/GPR_model_{self.experiment_name}.")
+        return str(f"in/GPR_model_{self.experiment_name}.")
 
     @property
     def output_E_file(self) -> str:
-        return str(self.output_dir / "electric_fields")
+        return str(f"out_{self.experiment_name}/electric_fields")
 
     @property
     def output_H_file(self) -> str:
-        return str(self.output_dir / "magnetic_fields")
+        return str(f"out_{self.experiment_name}/magnetic_fields")
 
     def ensure_dirs(self) -> None:
         self.input_dir.mkdir(parents=True, exist_ok=True)
