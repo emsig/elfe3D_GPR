@@ -27,7 +27,7 @@ from domain import ModelDomain
 from geolayers import LayerStack
 from sources import SourceAntenna
 from receivers import ReceiverArray
-from anomalies import BoxAnomaly
+from anomalies import BoxAnomaly, SphereAnomaly
 from pml import PMLConfig
 
 # Coordinate precision used throughout all file output.
@@ -127,11 +127,17 @@ class PolyAssembler:
         self.receivers_y_1_tet = receivers.y_1_tet
         self.receivers_z_tet  = receivers.z_tet
 
-        # Anomaly parameters (match original self.ax, self.ay, etc.) - only set when anomaly is present
-        self.ax    = anomaly.x          if anomaly is not None else None
-        self.ay    = anomaly.y          if anomaly is not None else None
-        self.az    = anomaly.z          if anomaly is not None else None
+        # Anomaly parameters (match original self.ax, self.ay, etc.) - only set for box anomalies
+        if isinstance(anomaly, BoxAnomaly):
+            self.ax = anomaly.x
+            self.ay = anomaly.y
+            self.az = anomaly.z
+        else:
+            self.ax = self.ay = self.az = None
         self.a_mat = anomaly.properties if anomaly is not None else None
+
+        # Sphere anomaly mesh cache
+        self.anomaly_mesh_faces = []
 
         # Frequency list (for anomaly volume computation)
         self.f_list = source.f_list
@@ -227,17 +233,30 @@ class PolyAssembler:
         if self.box_present:
             self.node_list_source_box = node_list_source_box
 
-        # Anomaly box nodes (top and bottom face corners) - only if anomaly present
+        # Anomaly nodes (box or sphere)
         self.node_list_anomaly = []
+        self.anomaly_mesh_faces = []
+
         if self.anomaly is not None:
-            nodes_an, self.num_node = create_rectangular_prism_nodes(
-                self.ax[0], self.ax[1], self.ay[0], self.ay[1], self.az[0], 101, self.num_node
-            )
-            self.node_list_anomaly.extend(nodes_an)
-            nodes_an, self.num_node = create_rectangular_prism_nodes(
-                self.ax[0], self.ax[1], self.ay[0], self.ay[1], self.az[1], 101, self.num_node
-            )
-            self.node_list_anomaly.extend(nodes_an)
+            if isinstance(self.anomaly, BoxAnomaly):
+                nodes_an, self.num_node = create_rectangular_prism_nodes(
+                    self.ax[0], self.ax[1], self.ay[0], self.ay[1], self.az[0], 101, self.num_node
+                )
+                self.node_list_anomaly.extend(nodes_an)
+                nodes_an, self.num_node = create_rectangular_prism_nodes(
+                    self.ax[0], self.ax[1], self.ay[0], self.ay[1], self.az[1], 101, self.num_node
+                )
+                self.node_list_anomaly.extend(nodes_an)
+            elif isinstance(self.anomaly, SphereAnomaly):
+                verts, faces = self.anomaly.surface_mesh()
+                self.anomaly_mesh_faces = [tuple(face.tolist()) for face in faces]
+                for v in verts:
+                    self.num_node += 1
+                    self.node_list_anomaly.append(
+                        Node(self.num_node, float(v[0]), float(v[1]), float(v[2]), 101)
+                    )
+            else:
+                raise TypeError("Unsupported anomaly type")
 
         # PML nodes
         if self.NUM_PML > 0:
@@ -433,8 +452,9 @@ class PolyAssembler:
         if self.anomaly is not None:
             self.num_regions += 1
             an_vol = self.anomaly.compute_max_element_volume(self.f_list[0])
+            cx, cy, cz = self.anomaly.centroid
             self.regions.append([
-                self.num_regions, 0, 0, self.anomaly.z_midpoint,
+                self.num_regions, cx, cy, cz,
                 self.num_regions, an_vol, "# Anomaly Region",
                 self.anomaly.rho, self.anomaly.mu_r, self.anomaly.eps_r,
             ])
@@ -654,13 +674,23 @@ class PolyAssembler:
         # ── Anomaly facets ────────────────────────────────────────────────
         self.anomaly_string = ""
         if self.anomaly is not None:
-            an_faces = create_cuboid_faces_from_nodes(self.node_list_anomaly)
             self.anomaly_string = "\n# anomaly facet\n"
             self.marker_anomaly = 101
-            for face in an_faces:
-                self.num_facet += 1
-                self.anomaly_string += f"1 0 {self.marker_anomaly}\n"
-                self.anomaly_string += "4 " + " ".join(map(str, [node[0] for node in face])) + "\n"
+            if isinstance(self.anomaly, BoxAnomaly):
+                an_faces = create_cuboid_faces_from_nodes(self.node_list_anomaly)
+                for face in an_faces:
+                    self.num_facet += 1
+                    self.anomaly_string += f"1 0 {self.marker_anomaly}\n"
+                    self.anomaly_string += "4 " + " ".join(map(str, [node[0] for node in face])) + "\n"
+            elif isinstance(self.anomaly, SphereAnomaly):
+                for tri in self.anomaly_mesh_faces:
+                    self.num_facet += 1
+                    self.anomaly_string += f"1 0 {self.marker_anomaly}\n"
+                    self.anomaly_string += "3 " + " ".join(
+                        str(self.node_list_anomaly[idx][0]) for idx in tri
+                    ) + "\n"
+            else:
+                raise TypeError("Unsupported anomaly type")
 
         # ── PML facets ────────────────────────────────────────────────────
         if self.NUM_PML > 0:

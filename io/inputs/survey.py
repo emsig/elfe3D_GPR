@@ -31,7 +31,7 @@ from dataclasses import dataclass, field
 from materials import Material
 from geolayers import GeoLayer, LayerStack
 from domain import ModelDomain
-from anomalies import BoxAnomaly
+from anomalies import BoxAnomaly, SphereAnomaly
 from sources import SourceAntenna
 from receivers import ReceiverArray
 from solver import SolverConfig
@@ -153,9 +153,12 @@ class GPRSurvey:
         layer_sigma_m:     list[float] = None,
 
         # ── Anomaly (optional) ───────────────────────────────────────
+        anomaly_type: str = "box",              # "box" or "sphere"
         anomaly_x: tuple | None = None,           # (x_min, x_max) or None
         anomaly_y: tuple | None = None,
         anomaly_z: tuple | None = None,
+        anomaly_center: tuple | None = None,      # (x,y,z) only used for sphere
+        anomaly_radius: float | None = None,      # only used for sphere
         anomaly_properties: tuple | None = None,  # (eps_r, sigma, mu_r, sigma_m)
 
         # ── Source ───────────────────────────────────────────────────
@@ -235,13 +238,34 @@ class GPRSurvey:
                 )
 
         # ── Validate anomaly parameter consistency ───────────────────
-        anomaly_coords = [anomaly_x, anomaly_y, anomaly_z]
-        if any(c is not None for c in anomaly_coords):
-            if not all(c is not None for c in anomaly_coords):
-                raise ValueError(
-                    "anomaly_x, anomaly_y, anomaly_z must all be provided "
-                    "together, or all left as None."
-                )
+        anomaly_type = anomaly_type.lower() if anomaly_type else "box"
+        if anomaly_type not in ("box", "sphere"):
+            raise ValueError("anomaly_type must be 'box' or 'sphere'")
+
+        if anomaly_type == "box":
+            anomaly_coords = [anomaly_x, anomaly_y, anomaly_z]
+            if any(c is not None for c in anomaly_coords):
+                if not all(c is not None for c in anomaly_coords):
+                    raise ValueError(
+                        "anomaly_x, anomaly_y, anomaly_z must all be provided "
+                        "together, or all left as None."
+                    )
+                if anomaly_properties is None:
+                    raise ValueError(
+                        "anomaly_properties (eps_r, sigma, mu_r, sigma_m) "
+                        "must be provided when an anomaly is defined."
+                    )
+        else:
+            # sphere
+            if anomaly_center is None or anomaly_radius is None:
+                if anomaly_x is None and anomaly_y is None and anomaly_z is None:
+                    # no anomaly
+                    pass
+                else:
+                    raise ValueError(
+                        "anomaly_center and anomaly_radius must be provided "
+                        "for sphere anomaly."
+                    )
             if anomaly_properties is None:
                 raise ValueError(
                     "anomaly_properties (eps_r, sigma, mu_r, sigma_m) "
@@ -357,11 +381,17 @@ class GPRSurvey:
 
         # ── Anomaly (optional) ───────────────────────────────────────
         anomaly = None
-        if anomaly_x is not None:
+        if anomaly_type == "box" and anomaly_x is not None:
             anomaly = BoxAnomaly(
                 x=anomaly_x,
                 y=anomaly_y,
                 z=anomaly_z,
+                properties=anomaly_properties,
+            )
+        elif anomaly_type == "sphere" and anomaly_center is not None:
+            anomaly = SphereAnomaly(
+                center=anomaly_center,
+                radius=anomaly_radius,
                 properties=anomaly_properties,
             )
 

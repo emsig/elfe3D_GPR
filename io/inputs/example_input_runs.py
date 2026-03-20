@@ -199,3 +199,67 @@ survey_anomaly = GPRSurvey.build(
 )
 
 survey_anomaly.generate()
+
+
+# ==================================
+# Case 3b: Two earth layers + sphere anomaly
+# ==================================
+survey_sphere_anomaly = GPRSurvey.build(
+    experiment_name="AnAir_sphere",
+    base_dir=BASE_DIR,
+    
+    # Domain
+    x_e=[-wave/10, 1 + wave/10],
+    y_e=[-wave/10, wave/10],
+    z_e=[-1.0 - wave/10/3, wave/10],
+
+    # Materials — air + 2 earth layers
+    air_eps_r=1.0,
+    air_sigma=1e-16,
+    layer_thicknesses=[1.0, wave/10/3],
+    layer_eps_r=[4.0, 9.0],
+    layer_sigma=[1e-4, 1e-3],
+    layer_mu_r=[1.0, 1.0],
+    layer_sigma_m=[0.0, 0.0],
+
+    # Sphere anomaly
+    anomaly_type="sphere",
+    anomaly_center=(0.0, 0.0, -0.7),
+    anomaly_radius=wave/16,
+    anomaly_properties=(20, 1e-4, 1.0, 0.0),
+
+    # Source
+    ricker_central_f=f,
+    num_points_per_range=1,
+    antenna_position=[0.0, 0.0, 0.025],
+    source_type=6,
+    current_direction=1,
+    num_segments=1,
+    s_f=250,
+    bh_f=1.0,
+    box_present=False,
+    box_x=[-1 + 0.75, 1 + 0.375],
+    m=5,
+
+    # Receivers
+    num_receivers_inline=48,
+    num_receivers_endfire=0,
+    num_receivers_oblique=0,
+
+    # Solver
+    solver_type=2,
+    max_ref_steps=0,
+    max_unknowns=5_000_000,
+    accuracy_tol=3e-5,
+    output_fields_vtk=1,
+
+    # PML
+    num_pml_layers=1,
+    pml_layer_thickness=wave/10,
+    pml_type="lin",
+    pml_decay_type=1,
+
+    least_samples_per_wavelength=20,
+)
+
+survey_sphere_anomaly.generate()
