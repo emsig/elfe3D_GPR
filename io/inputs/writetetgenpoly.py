@@ -3,9 +3,17 @@ writetetgenpoly.py
 ------------------
 Assembles and writes the TetGen .poly input file.
 
-PolyAssembler takes all domain objects (layers, source, receivers, anomaly,
+PolyAssembler takes all domain objects (layers, source, receivers, anomalies,
 PML) and runs the three assembly passes — nodes, regions, facets — then
 writes the .poly file.
+
+Anomaly handling supports a heterogeneous list of BoxAnomaly and/or
+SphereAnomaly objects.  Both share the same material interface; geometry
+differs only in the node/facet passes:
+  BoxAnomaly    → 8 corner nodes from create_rectangular_prism_nodes,
+                  6 quad facets from create_cuboid_faces_from_nodes
+  SphereAnomaly → icosphere vertex nodes (already in world space),
+                  triangular facets from the .faces index array
 """
 
 import os
@@ -43,7 +51,7 @@ class PolyAssembler:
 
     Usage
     -----
-    assembler = PolyAssembler(domain, layers, source, receivers, anomaly, pml)
+    assembler = PolyAssembler(domain, layers, source, receivers, anomalies, pml)
     assembler.evaluate_all_nodes()
     assembler.evaluate_all_regions()
     assembler.evaluate_all_facets()
@@ -56,14 +64,14 @@ class PolyAssembler:
         layers: LayerStack,
         source: SourceAntenna,
         receivers: ReceiverArray,
-        anomaly: BoxAnomaly,
+        anomalies: list,          # list[BoxAnomaly | SphereAnomaly], may be empty
         pml: PMLConfig,
     ):
         self.domain    = domain
         self.layers    = layers
         self.source    = source
         self.receivers = receivers
-        self.anomaly   = anomaly
+        self.anomalies = anomalies   # heterogeneous list
         self.pml       = pml
 
         # Flat domain bounds (convenience, matches original self.x_min etc.)
@@ -127,18 +135,6 @@ class PolyAssembler:
         self.receivers_y_1_tet = receivers.y_1_tet
         self.receivers_z_tet  = receivers.z_tet
 
-        # Anomaly parameters (match original self.ax, self.ay, etc.) - only set for box anomalies
-        if isinstance(anomaly, BoxAnomaly):
-            self.ax = anomaly.x
-            self.ay = anomaly.y
-            self.az = anomaly.z
-        else:
-            self.ax = self.ay = self.az = None
-        self.a_mat = anomaly.properties if anomaly is not None else None
-
-        # Sphere anomaly mesh cache
-        self.anomaly_mesh_faces = []
-
         # Frequency list (for anomaly volume computation)
         self.f_list = source.f_list
 
@@ -147,6 +143,10 @@ class PolyAssembler:
         self.num_facet  = 0
         self.num_regions = 0
         self.regions    = []
+
+        # Per-anomaly node lists — populated in evaluate_all_nodes()
+        # Each entry: (anomaly_obj, node_list)
+        self._anomaly_data: list[tuple] = []
 
     # ==========================================================================
     # Public API
@@ -173,7 +173,7 @@ class PolyAssembler:
         """
         Evaluate all nodes for the .poly file.
         Sets self.node_list_domain_prism, self.node_list_of_list_of_interfaces,
-        self.node_list_receiver, self.node_list_source, self.node_list_anomaly,
+        self.node_list_receiver, self.node_list_source, self._anomaly_data,
         and (if PML active) self.node_list_PML_2, self.node_list_PML_3.
         """
         self.num_node = 0
@@ -233,30 +233,49 @@ class PolyAssembler:
         if self.box_present:
             self.node_list_source_box = node_list_source_box
 
-        # Anomaly nodes (box or sphere)
-        self.node_list_anomaly = []
-        self.anomaly_mesh_faces = []
+        # ── Anomaly nodes ─────────────────────────────────────────────────────
+        # Each anomaly gets a unique boundary marker starting at 101.
+        # self._anomaly_data stores (anomaly_obj, node_list) pairs so that
+        # evaluate_all_regions() and evaluate_all_facets() can iterate them
+        # without repeating the isinstance() dispatch.
+        self._anomaly_data = []
 
-        if self.anomaly is not None:
-            if isinstance(self.anomaly, BoxAnomaly):
-                nodes_an, self.num_node = create_rectangular_prism_nodes(
-                    self.ax[0], self.ax[1], self.ay[0], self.ay[1], self.az[0], 101, self.num_node
+        for an_idx, anomaly in enumerate(self.anomalies):
+            marker = 101 + an_idx          # 101, 102, 103, …
+            node_list_an = []
+
+            if isinstance(anomaly, BoxAnomaly):
+                # 8 corner nodes: bottom face then top face
+                nodes_bot, self.num_node = create_rectangular_prism_nodes(
+                    anomaly.x[0], anomaly.x[1],
+                    anomaly.y[0], anomaly.y[1],
+                    anomaly.z[0], marker, self.num_node,
                 )
-                self.node_list_anomaly.extend(nodes_an)
-                nodes_an, self.num_node = create_rectangular_prism_nodes(
-                    self.ax[0], self.ax[1], self.ay[0], self.ay[1], self.az[1], 101, self.num_node
+                node_list_an.extend(nodes_bot)
+                nodes_top, self.num_node = create_rectangular_prism_nodes(
+                    anomaly.x[0], anomaly.x[1],
+                    anomaly.y[0], anomaly.y[1],
+                    anomaly.z[1], marker, self.num_node,
                 )
-                self.node_list_anomaly.extend(nodes_an)
-            elif isinstance(self.anomaly, SphereAnomaly):
-                verts, faces = self.anomaly.surface_mesh()
-                self.anomaly_mesh_faces = [tuple(face.tolist()) for face in faces]
-                for v in verts:
+                node_list_an.extend(nodes_top)
+
+            elif isinstance(anomaly, SphereAnomaly):
+                # Icosphere vertices — already in world space
+                for v in anomaly.vertices:
                     self.num_node += 1
-                    self.node_list_anomaly.append(
-                        Node(self.num_node, float(v[0]), float(v[1]), float(v[2]), 101)
+                    node_list_an.append(
+                        Node(self.num_node, float(v[0]), float(v[1]), float(v[2]), marker)
                     )
+
             else:
-                raise TypeError("Unsupported anomaly type")
+                raise TypeError(
+                    f"Unknown anomaly type at index {an_idx}: {type(anomaly)}"
+                )
+
+            self._anomaly_data.append((anomaly, node_list_an))
+
+        # Flat convenience list used by _write_poly_file
+        self.node_list_anomaly = [n for _, nl in self._anomaly_data for n in nl]
 
         # PML nodes
         if self.NUM_PML > 0:
@@ -373,7 +392,7 @@ class PolyAssembler:
     def evaluate_all_regions(self) -> None:
         """
         Evaluate all TetGen region seed points with material attributes.
-        Includes earth layers, source box (if present), anomaly, and PML.
+        Includes earth layers, source box (if present), anomalies, and PML.
         """
         self.num_regions = 0
         regions = []
@@ -448,15 +467,18 @@ class PolyAssembler:
 
         self.regions = regions
 
-        # ── Anomaly region ──────────────────────────────────────────────────
-        if self.anomaly is not None:
+        # ── Anomaly regions ─────────────────────────────────────────────────
+        # One region seed per anomaly, placed at its centroid.
+        for an_idx, (anomaly, _) in enumerate(self._anomaly_data):
             self.num_regions += 1
-            an_vol = self.anomaly.compute_max_element_volume(self.f_list[0])
-            cx, cy, cz = self.anomaly.centroid
+            cx, cy, cz = anomaly.centroid
+            an_vol = anomaly.compute_max_element_volume(self.f_list[0])
+            r_label = f"# Anomaly {an_idx + 1} Region ({type(anomaly).__name__})"
             self.regions.append([
-                self.num_regions, cx, cy, cz,
-                self.num_regions, an_vol, "# Anomaly Region",
-                self.anomaly.rho, self.anomaly.mu_r, self.anomaly.eps_r,
+                self.num_regions,
+                round(cx, 5), round(cy, 5), round(cz, 5),
+                self.num_regions, an_vol, r_label,
+                anomaly.rho, anomaly.mu_r, anomaly.eps_r,
             ])
 
         # ── PML regions ─────────────────────────────────────────────────────
@@ -672,25 +694,34 @@ class PolyAssembler:
                 self.num_facet += 1
 
         # ── Anomaly facets ────────────────────────────────────────────────
+        # BoxAnomaly  → 6 quad facets via create_cuboid_faces_from_nodes
+        # SphereAnomaly → one triangular facet per icosphere face
         self.anomaly_string = ""
-        if self.anomaly is not None:
-            self.anomaly_string = "\n# anomaly facet\n"
-            self.marker_anomaly = 101
-            if isinstance(self.anomaly, BoxAnomaly):
-                an_faces = create_cuboid_faces_from_nodes(self.node_list_anomaly)
-                for face in an_faces:
-                    self.num_facet += 1
-                    self.anomaly_string += f"1 0 {self.marker_anomaly}\n"
-                    self.anomaly_string += "4 " + " ".join(map(str, [node[0] for node in face])) + "\n"
-            elif isinstance(self.anomaly, SphereAnomaly):
-                for tri in self.anomaly_mesh_faces:
-                    self.num_facet += 1
-                    self.anomaly_string += f"1 0 {self.marker_anomaly}\n"
-                    self.anomaly_string += "3 " + " ".join(
-                        str(self.node_list_anomaly[idx][0]) for idx in tri
-                    ) + "\n"
-            else:
-                raise TypeError("Unsupported anomaly type")
+        if self._anomaly_data:
+            self.anomaly_string = "\n# anomaly facets\n"
+            for an_idx, (anomaly, node_list) in enumerate(self._anomaly_data):
+                marker = 101 + an_idx
+                self.anomaly_string += f"\n# anomaly {an_idx + 1} ({type(anomaly).__name__})\n"
+
+                if isinstance(anomaly, BoxAnomaly):
+                    an_faces = create_cuboid_faces_from_nodes(node_list)
+                    for face in an_faces:
+                        self.num_facet += 1
+                        self.anomaly_string += f"1 0 {marker}\n"
+                        self.anomaly_string += (
+                            "4 " + " ".join(map(str, [node[0] for node in face])) + "\n"
+                        )
+
+                elif isinstance(anomaly, SphereAnomaly):
+                    # node_list[i][0] is the 1-based TetGen node number for
+                    # icosphere vertex i (0-indexed in anomaly.faces)
+                    for fi, fj, fk in anomaly.faces:
+                        n1 = node_list[fi][0]
+                        n2 = node_list[fj][0]
+                        n3 = node_list[fk][0]
+                        self.num_facet += 1
+                        self.anomaly_string += f"1 0 {marker}\n"
+                        self.anomaly_string += f"3 {n1} {n2} {n3}\n"
 
         # ── PML facets ────────────────────────────────────────────────────
         if self.NUM_PML > 0:
@@ -1264,9 +1295,10 @@ class PolyAssembler:
                     f.write(f"{node[0]} {_r(node[1])} {_r(node[2])} {_r(node[3])} {node[4]}\n")
                 f.write("\n")
 
-            if self.anomaly is not None:
-                f.write("# Anomaly nodes\n")
-                for node in self.node_list_anomaly:
+            # ── Anomaly nodes (one block per anomaly) ────────────────────────
+            for an_idx, (anomaly, node_list) in enumerate(self._anomaly_data):
+                f.write(f"# Anomaly {an_idx + 1} nodes ({type(anomaly).__name__})\n")
+                for node in node_list:
                     f.write(f"{node[0]} {_r(node[1])} {_r(node[2])} {_r(node[3])} {node[4]}\n")
                 f.write("\n")
 

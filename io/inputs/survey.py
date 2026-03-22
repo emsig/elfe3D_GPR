@@ -7,11 +7,27 @@ GPRSurvey composes all domain objects and runs the full input generation
 pipeline: mesh sizing → assembly → .poly file → FEM input files.
 
 It handles all combinations of:
-  - num_layers = 0        : air-only domain (no earth)
-  - num_layers >= 1       : layered earth
-  - anomaly = None        : no anomaly
-  - anomaly = BoxAnomaly  : embedded rectangular body
+  - num_layers = 0           : air-only domain (no earth)
+  - num_layers >= 1          : layered earth
+  - anomalies = []           : no anomaly
+  - anomalies = [BoxAnomaly] : one or more rectangular bodies
+  - anomalies = [SphereAnomaly] : one or more spherical bodies
+  - mixed list               : any combination of the above
   - box_present = True/False : source refinement box
+
+Two ways to supply anomalies via GPRSurvey.build():
+
+  Option A — pass a ready-built list (preferred for multiple anomalies):
+      anomalies=[
+          BoxAnomaly(x=(...), y=(...), z=(...), properties=(...)),
+          SphereAnomaly(center=(...), radius=..., properties=(...)),
+      ]
+
+  Option B — legacy flat parameters (single BoxAnomaly, fully backward-compat):
+      anomaly_x=(-0.3, 0.3), anomaly_y=(...), anomaly_z=(...),
+      anomaly_properties=(eps_r, sigma, mu_r, sigma_m)
+
+Both options can be combined; Option B appends to whatever is in Option A.
 
 Usage
 -----
@@ -112,7 +128,7 @@ class GPRSurvey:
     solver    : SolverConfig
     pml       : PMLConfig
     io        : IOConfig
-    anomaly   : BoxAnomaly or None
+    anomalies : list of BoxAnomaly / SphereAnomaly objects (may be empty)
     """
 
     domain:    ModelDomain
@@ -122,7 +138,7 @@ class GPRSurvey:
     solver:    SolverConfig
     pml:       PMLConfig
     io:        IOConfig
-    anomaly:   BoxAnomaly | None = None
+    anomalies: list = field(default_factory=list)
 
     # ------------------------------------------------------------------
     # Named constructor — the main entry point
@@ -152,13 +168,13 @@ class GPRSurvey:
         layer_mu_r:        list[float] = None,
         layer_sigma_m:     list[float] = None,
 
-        # ── Anomaly (optional) ───────────────────────────────────────
-        anomaly_type: str = "box",              # "box" or "sphere"
+        # ── Anomalies ────────────────────────────────────────────────
+        # Option A: pass a ready-built list of BoxAnomaly / SphereAnomaly objects
+        anomalies: list | None = None,
+        # Option B: legacy single-box flat parameters (still fully supported)
         anomaly_x: tuple | None = None,           # (x_min, x_max) or None
         anomaly_y: tuple | None = None,
         anomaly_z: tuple | None = None,
-        anomaly_center: tuple | None = None,      # (x,y,z) only used for sphere
-        anomaly_radius: float | None = None,      # only used for sphere
         anomaly_properties: tuple | None = None,  # (eps_r, sigma, mu_r, sigma_m)
 
         # ── Source ───────────────────────────────────────────────────
@@ -209,8 +225,8 @@ class GPRSurvey:
         Handles:
           - num_layers = 0  (air only, no earth layers)
           - num_layers >= 1 (layered earth)
-          - anomaly = None  (no anomaly)
-          - anomaly present (BoxAnomaly)
+          - anomalies = []  (no anomaly)
+          - anomalies present: any mix of BoxAnomaly / SphereAnomaly
         """
 
         # ── Defaults for mutable arguments ──────────────────────────
@@ -237,40 +253,30 @@ class GPRSurvey:
                     f"has {num_layers}. They must match."
                 )
 
-        # ── Validate anomaly parameter consistency ───────────────────
-        anomaly_type = anomaly_type.lower() if anomaly_type else "box"
-        if anomaly_type not in ("box", "sphere"):
-            raise ValueError("anomaly_type must be 'box' or 'sphere'")
+        # ── Build anomalies list ──────────────────────────────────────
+        # Start from Option A list (or empty), then append any Option B box.
+        anomalies_list: list = list(anomalies) if anomalies else []
 
-        if anomaly_type == "box":
-            anomaly_coords = [anomaly_x, anomaly_y, anomaly_z]
-            if any(c is not None for c in anomaly_coords):
-                if not all(c is not None for c in anomaly_coords):
-                    raise ValueError(
-                        "anomaly_x, anomaly_y, anomaly_z must all be provided "
-                        "together, or all left as None."
-                    )
-                if anomaly_properties is None:
-                    raise ValueError(
-                        "anomaly_properties (eps_r, sigma, mu_r, sigma_m) "
-                        "must be provided when an anomaly is defined."
-                    )
-        else:
-            # sphere
-            if anomaly_center is None or anomaly_radius is None:
-                if anomaly_x is None and anomaly_y is None and anomaly_z is None:
-                    # no anomaly
-                    pass
-                else:
-                    raise ValueError(
-                        "anomaly_center and anomaly_radius must be provided "
-                        "for sphere anomaly."
-                    )
+        anomaly_coords = [anomaly_x, anomaly_y, anomaly_z]
+        if any(c is not None for c in anomaly_coords):
+            if not all(c is not None for c in anomaly_coords):
+                raise ValueError(
+                    "anomaly_x, anomaly_y, anomaly_z must all be provided "
+                    "together, or all left as None."
+                )
             if anomaly_properties is None:
                 raise ValueError(
                     "anomaly_properties (eps_r, sigma, mu_r, sigma_m) "
-                    "must be provided when an anomaly is defined."
+                    "must be provided when anomaly_x/y/z are set."
                 )
+            anomalies_list.append(
+                BoxAnomaly(
+                    x=anomaly_x,
+                    y=anomaly_y,
+                    z=anomaly_z,
+                    properties=anomaly_properties,
+                )
+            )
 
         # ── Build materials ──────────────────────────────────────────
         air = Material(
@@ -379,22 +385,6 @@ class GPRSurvey:
         )
         print(f"Receiver antenna depth: {receivers.depth} m")
 
-        # ── Anomaly (optional) ───────────────────────────────────────
-        anomaly = None
-        if anomaly_type == "box" and anomaly_x is not None:
-            anomaly = BoxAnomaly(
-                x=anomaly_x,
-                y=anomaly_y,
-                z=anomaly_z,
-                properties=anomaly_properties,
-            )
-        elif anomaly_type == "sphere" and anomaly_center is not None:
-            anomaly = SphereAnomaly(
-                center=anomaly_center,
-                radius=anomaly_radius,
-                properties=anomaly_properties,
-            )
-
         # ── IO paths ─────────────────────────────────────────────────
         io = IOConfig(
             experiment_name=experiment_name,
@@ -409,7 +399,7 @@ class GPRSurvey:
             solver=solver,
             pml=pml,
             io=io,
-            anomaly=anomaly,
+            anomalies=anomalies_list,
         )
 
     # ------------------------------------------------------------------
@@ -438,12 +428,13 @@ class GPRSurvey:
                     f"Receiver {i} at ({rx}, {ry}, {rz}) is outside the domain."
                 )
 
-        # Real anomaly must be inside domain
-        if self.anomaly is not None:
-            cx, cy, cz = self.anomaly.centroid
+        # Every anomaly centroid must be inside domain
+        for i, anomaly in enumerate(self.anomalies):
+            cx, cy, cz = anomaly.centroid
             if not self.domain.contains(cx, cy, cz):
                 raise ValueError(
-                    f"Anomaly centroid {self.anomaly.centroid} is outside the domain."
+                    f"Anomaly {i} ({type(anomaly).__name__}) centroid "
+                    f"{anomaly.centroid} is outside the domain."
                 )
 
         # Mesh sizing must have been computed
@@ -476,7 +467,7 @@ class GPRSurvey:
             layers=self.layers,
             source=self.source,
             receivers=self.receivers,
-            anomaly=self.anomaly,
+            anomalies=self.anomalies,
             pml=self.pml,
         )
         assembler.evaluate_all_input_data()
