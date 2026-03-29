@@ -3,9 +3,9 @@ clc
 % plan view just below source level
 z=0.01;
 % compute the fields in the horizontal plane in a custom grid
-xmin = 0.2;
-xmax = 4.8;
-nx = 256;
+xmin = 0.1;
+xmax = 1.0;
+nx = 48;
 x = linspace(xmin, xmax, nx);
 dx = x(2) - x(1);  % spacing
 xx_pre = [0.0001, 0.001, 0.01];

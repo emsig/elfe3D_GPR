@@ -6,7 +6,7 @@ clc
 
 % Parameters
 z = 0.025; % Height of source above surface
-r_all = linspace(1.0,4.0,76); % Radial offsets along surface
+r_all = linspace(0.1, 1, 48); % Radial offsets along surface
 epsr1 = 4; % Relative permittivity
 sigma1 = 1e-16; % Conductivity
 c0 = 299792458; % Free space velocity
