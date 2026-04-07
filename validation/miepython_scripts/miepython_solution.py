@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import miepython as mie
+import csv
 
 # Physical constants
 MU0 = 4e-7 * np.pi
@@ -234,7 +235,7 @@ freqs = np.linspace(1e6, 1e9, 1024)  # 1 MHz to 1 GHz
 
 # Geometry (meters)
 r_s = np.array([0.0, 0.0, -0.0001])
-r_c = np.array([0.5, 0.0, -0.0001])
+r_c = np.array([0.5, 0.0, -0.0001]) #@TODO: Need to fix to match elfe3D_GPR later.
 
 r_receivers = [
     np.array([0.6, 0.0, -0.0001]),
@@ -288,4 +289,130 @@ for i, ax in enumerate(axes.flat):
 
 plt.tight_layout()
 plt.savefig("mie_green_transfer_function.png", dpi=300)
+plt.show()
+
+# -----------------------------
+# Usage for radial cases
+# -----------------------------
+
+# Fixed frequency
+freq = 100e6  # 100 MHz
+freqs = [freq]
+
+# Receivers for inline: along x from 0.1 to 1 m, 48 points
+distances_inline = np.linspace(0.1, 1.0, 48)
+r_receivers_inline = [np.array([d, 0.0, -0.0001]) for d in distances_inline]
+
+# Receivers for endfire: along y from 0.1 to 1 m at x=0.5, 48 points
+distances_endfire = np.linspace(0.1, 1.0, 48)
+r_receivers_endfire = [np.array([0.0, d, -0.0001]) for d in distances_endfire]
+
+# Compute for inline
+E_inline = compute_full_field(
+    freqs,
+    r_s,
+    r_c,
+    r_receivers_inline,
+    p,
+    eps_bg,
+    sigma_bg,
+    eps_sph,
+    sigma_sph,
+    radius,
+    include_direct=True,
+    include_reflect_tx=False,
+    include_reflect_rx=False
+)
+
+# Compute for endfire
+E_endfire = compute_full_field(
+    freqs,
+    r_s,
+    r_c,
+    r_receivers_endfire,
+    p,
+    eps_bg,
+    sigma_bg,
+    eps_sph,
+    sigma_sph,
+    radius,
+    include_direct=True,
+    include_reflect_tx=False,
+    include_reflect_rx=False
+)
+
+# E_inline and E_endfire shape: (1, 48, 3) since one freq, 48 receivers, 3 components
+
+# Save to CSV
+# For inline
+with open('inline_electric_field.csv', 'w', newline='') as csvfile:
+    writer = csv.writer(csvfile)
+    writer.writerow(['Distance (m)', 'Ex_real', 'Ex_imag', 'Ey_real', 'Ey_imag', 'Ez_real', 'Ez_imag'])
+    for i, d in enumerate(distances_inline):
+        row = [d, E_inline[0, i, 0].real, E_inline[0, i, 0].imag,
+               E_inline[0, i, 1].real, E_inline[0, i, 1].imag,
+               E_inline[0, i, 2].real, E_inline[0, i, 2].imag]
+        writer.writerow(row)
+
+# For endfire
+with open('endfire_electric_field.csv', 'w', newline='') as csvfile:
+    writer = csv.writer(csvfile)
+    writer.writerow(['Distance (m)', 'Ex_real', 'Ex_imag', 'Ey_real', 'Ey_imag', 'Ez_real', 'Ez_imag'])
+    for i, d in enumerate(distances_endfire):
+        row = [d, E_endfire[0, i, 0].real, E_endfire[0, i, 0].imag,
+               E_endfire[0, i, 1].real, E_endfire[0, i, 1].imag,
+               E_endfire[0, i, 2].real, E_endfire[0, i, 2].imag]
+        writer.writerow(row)
+
+print("Data saved to inline_electric_field.csv and endfire_electric_field.csv")
+
+# Create three subplots, one for each measurement (inline and endfire)
+fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+
+# Common styling (match class defaults)
+label_fs = 18
+tick_fs = 18
+legend_fs = 15
+title_fs = 18
+lw = 2.5
+
+component_names = ['|E_x|', '|E_y|', '|E_z|']
+
+# Plot inline
+ax = axes[0]
+for component in range(3):
+    ax.plot(
+        distances_inline,
+        np.abs(E_inline[0, :, component]),
+        label=component_names[component],
+        linewidth=lw
+    )
+
+ax.set_xlabel("Distance (m)", fontsize=label_fs)
+ax.set_ylabel("Electric Field Magnitude", fontsize=label_fs)
+ax.set_title("Inline Configuration", fontsize=title_fs, fontweight="bold")
+ax.tick_params(labelsize=tick_fs)
+ax.grid(True, linestyle="--", linewidth=0.5)   # match class style
+ax.legend(fontsize=legend_fs)
+
+
+# Plot endfire
+ax = axes[1]
+for component in range(3):
+    ax.plot(
+        distances_endfire,
+        np.abs(E_endfire[0, :, component]),
+        label=component_names[component],
+        linewidth=lw
+    )
+
+ax.set_xlabel("Distance (m)", fontsize=label_fs)
+ax.set_ylabel("Electric Field Magnitude", fontsize=label_fs)
+ax.set_title("Endfire Configuration", fontsize=title_fs, fontweight="bold")
+ax.tick_params(labelsize=tick_fs)
+ax.grid(True, linestyle="--", linewidth=0.5)
+ax.legend(fontsize=legend_fs)
+
+plt.tight_layout()
+plt.savefig("mie_green_radial_survey.png", dpi=300)
 plt.show()
