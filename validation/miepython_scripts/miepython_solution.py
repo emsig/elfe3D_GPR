@@ -367,51 +367,49 @@ with open('endfire_electric_field.csv', 'w', newline='') as csvfile:
 print("Data saved to inline_electric_field.csv and endfire_electric_field.csv")
 
 # Create three subplots, one for each measurement (inline and endfire)
-fig, axes = plt.subplots(1, 2, figsize=(14, 5))
 
 # Common styling (match class defaults)
-label_fs = 18
-tick_fs = 18
-legend_fs = 15
-title_fs = 18
+label_fs = 18/2
+tick_fs = 18/2
+legend_fs = 15/2
+title_fs = 18/2
 lw = 2.5
 
 component_names = ['|E_x|', '|E_y|', '|E_z|']
 
-# Plot inline
-ax = axes[0]
+# Create 3x2 subplot grid (3 components x 2 configurations)
+fig, axes = plt.subplots(3, 2, figsize=(14, 12))
+
+component_names = ['|E_x|', '|E_y|', '|E_z|']
+
 for component in range(3):
+    # Inline configuration
+    ax = axes[component, 0]
     ax.plot(
         distances_inline,
         np.abs(E_inline[0, :, component]),
-        label=component_names[component],
-        linewidth=lw
+        linewidth=lw,
+        color='C0'
     )
+    ax.set_xlabel("Distance (m)", fontsize=label_fs)
+    ax.set_ylabel("Electric Field Magnitude", fontsize=label_fs)
+    ax.set_title(f"Inline: {component_names[component]}", fontsize=title_fs, fontweight="bold")
+    ax.tick_params(labelsize=tick_fs)
+    ax.grid(True, linestyle="--", linewidth=0.5)
 
-ax.set_xlabel("Distance (m)", fontsize=label_fs)
-ax.set_ylabel("Electric Field Magnitude", fontsize=label_fs)
-ax.set_title("Inline Configuration", fontsize=title_fs, fontweight="bold")
-ax.tick_params(labelsize=tick_fs)
-ax.grid(True, linestyle="--", linewidth=0.5)   # match class style
-ax.legend(fontsize=legend_fs)
-
-
-# Plot endfire
-ax = axes[1]
-for component in range(3):
+    # Endfire configuration
+    ax = axes[component, 1]
     ax.plot(
         distances_endfire,
         np.abs(E_endfire[0, :, component]),
-        label=component_names[component],
-        linewidth=lw
+        linewidth=lw,
+        color='C1'
     )
-
-ax.set_xlabel("Distance (m)", fontsize=label_fs)
-ax.set_ylabel("Electric Field Magnitude", fontsize=label_fs)
-ax.set_title("Endfire Configuration", fontsize=title_fs, fontweight="bold")
-ax.tick_params(labelsize=tick_fs)
-ax.grid(True, linestyle="--", linewidth=0.5)
-ax.legend(fontsize=legend_fs)
+    ax.set_xlabel("Distance (m)", fontsize=label_fs)
+    ax.set_ylabel("Electric Field Magnitude", fontsize=label_fs)
+    ax.set_title(f"Endfire: {component_names[component]}", fontsize=title_fs, fontweight="bold")
+    ax.tick_params(labelsize=tick_fs)
+    ax.grid(True, linestyle="--", linewidth=0.5)
 
 plt.tight_layout()
 plt.savefig("mie_green_radial_survey.png", dpi=300)
