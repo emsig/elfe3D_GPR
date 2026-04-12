@@ -129,6 +129,7 @@ def fresnel_reflection_coefficient(eps_bg: np.complex128, omega: float, theta_i:
 # ---------------------------------
 # Main Mie + Green's function model
 # ---------------------------------
+
 def compute_full_field(
     freqs,
     r_s,
@@ -230,89 +231,39 @@ def compute_full_field(
 # Usage
 # -----------------------------
 
-# Frequency sweep
-freqs = np.linspace(1e6, 1e9, 1024)  # 1 MHz to 1 GHz
-
-# Geometry (meters)
-r_s = np.array([0.0, 0.0, -0.0001])
-r_c = np.array([0.5, 0.0, -0.0001]) #@TODO: Need to fix to match elfe3D_GPR later.
-
-r_receivers = [
-    np.array([0.6, 0.0, -0.0001]),
-    np.array([0.8, 0.0, -0.0001]),
-    np.array([1.0, 0.0, -0.0001]),
-]
-
-# Medium properties (example: dry soil-ish)
-eps_bg = 4.0
-sigma_bg = 0.0001
-
-# Sphere properties (anomaly)
-eps_sph = 20.0
-sigma_sph = 0.001
-
-radius = 0.1  # meters
-p = np.array([0.0, 0.0, 1.0]) # Calibrate to elfe3D_GPR later.
-
-# Compute
-E_freq = compute_full_field(
-    freqs,
-    r_s,
-    r_c,
-    r_receivers,
-    p,
-    eps_bg,
-    sigma_bg,
-    eps_sph,
-    sigma_sph,
-    radius,
-    include_direct=True,
-    include_reflect_tx=False,
-    include_reflect_rx=False
-)
-
-print("Shape (freqs, receivers, components):", E_freq.shape)
-
-# Create three subplots, one for each receiver
-fig, axes = plt.subplots(3, 3, figsize=(14, 10))
-
-for i, ax in enumerate(axes.flat):
-    receiver_idx = i % 3
-    component    = i // 3
-    component_names = ['|E_x|', '|E_y|', '|E_z|']
-    
-    ax.plot(freqs, np.abs(E_freq[:, receiver_idx, component]), '-o', linewidth=1, markersize=1.5)
-    ax.set_xlabel("Frequency (Hz)")
-    ax.set_ylabel(component_names[component])
-    ax.set_title(f"Receiver {receiver_idx+1}: {component_names[component]}")
-    ax.grid(True, alpha=0.3)
-
-plt.tight_layout()
-plt.savefig("mie_green_transfer_function.png", dpi=300)
-plt.show()
-
-# -----------------------------
-# Usage for radial cases
-# -----------------------------
-
-# Fixed frequency
+# frequency
 freq = 100e6  # 100 MHz
 freqs = [freq]
 
-# Receivers for inline: along x from 0.1 to 1 m, 48 points
-distances_inline = np.linspace(0.1, 1.0, 48)
-r_receivers_inline = [np.array([d, 0.0, -0.0001]) for d in distances_inline]
+# Geometry (meters)
+r_s = np.array([0.0, 0.0, 0.025])   # Dipole source 2.5 cm above the surface
+r_c = np.array([0.0, 0.0, -0.7]) #@TODO: Need to fix to match elfe3D_GPR later.
+
+# Medium properties
+eps_bg = 4.0
+sigma_bg = 1e-4
+
+# Sphere properties (anomaly)
+eps_sph = 20.0
+sigma_sph = 1e-4
+
+radius = (3e8 / freq) / 16
+p = np.array([1.0, 0.0, 0.0]) # Calibrate to elfe3D_GPR later.
+
+# Receivers for broadside: along y from 0.1 to 1 m, 48 points
+distances_broadside = np.linspace(0.1, 1.0, 48)
+r_receivers_broadside = [np.array([0.0, d, -0.0001]) for d in distances_broadside]
 
 # Receivers for endfire: along y from 0.1 to 1 m at x=0.5, 48 points
 distances_endfire = np.linspace(0.1, 1.0, 48)
-r_receivers_endfire = [np.array([0.0, d, -0.0001]) for d in distances_endfire]
+r_receivers_endfire = [np.array([d, 0.0, -0.0001]) for d in distances_endfire]
 
-# Compute for inline
-E_inline = compute_full_field(
+# Compute for broadside
+E_broadside = compute_full_field(
     freqs,
     r_s,
     r_c,
-    r_receivers_inline,
+    r_receivers_broadside,
     p,
     eps_bg,
     sigma_bg,
@@ -341,17 +292,17 @@ E_endfire = compute_full_field(
     include_reflect_rx=False
 )
 
-# E_inline and E_endfire shape: (1, 48, 3) since one freq, 48 receivers, 3 components
+# E_broadside and E_endfire shape: (1, 48, 3) since one freq, 48 receivers, 3 components
 
 # Save to CSV
-# For inline
-with open('inline_electric_field.csv', 'w', newline='') as csvfile:
+# For broadside
+with open('broadside_electric_field.csv', 'w', newline='') as csvfile:
     writer = csv.writer(csvfile)
     writer.writerow(['Distance (m)', 'Ex_real', 'Ex_imag', 'Ey_real', 'Ey_imag', 'Ez_real', 'Ez_imag'])
-    for i, d in enumerate(distances_inline):
-        row = [d, E_inline[0, i, 0].real, E_inline[0, i, 0].imag,
-               E_inline[0, i, 1].real, E_inline[0, i, 1].imag,
-               E_inline[0, i, 2].real, E_inline[0, i, 2].imag]
+    for i, d in enumerate(distances_broadside):
+        row = [d, E_broadside[0, i, 0].real, E_broadside[0, i, 0].imag,
+               E_broadside[0, i, 1].real, E_broadside[0, i, 1].imag,
+               E_broadside[0, i, 2].real, E_broadside[0, i, 2].imag]
         writer.writerow(row)
 
 # For endfire
@@ -383,17 +334,17 @@ fig, axes = plt.subplots(3, 2, figsize=(14, 12))
 component_names = ['|E_x|', '|E_y|', '|E_z|']
 
 for component in range(3):
-    # Inline configuration
+    # Broadside configuration
     ax = axes[component, 0]
     ax.plot(
-        distances_inline,
-        np.abs(E_inline[0, :, component]),
+        distances_broadside,
+        np.abs(E_broadside[0, :, component]),
         linewidth=lw,
         color='C0'
     )
     ax.set_xlabel("Distance (m)", fontsize=label_fs)
     ax.set_ylabel("Electric Field Magnitude", fontsize=label_fs)
-    ax.set_title(f"Inline: {component_names[component]}", fontsize=title_fs, fontweight="bold")
+    ax.set_title(f"Broadside: {component_names[component]}", fontsize=title_fs, fontweight="bold")
     ax.tick_params(labelsize=tick_fs)
     ax.grid(True, linestyle="--", linewidth=0.5)
 

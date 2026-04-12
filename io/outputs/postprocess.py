@@ -52,6 +52,36 @@ def field_error(ref: GPRDataset, test: GPRDataset, qty_idx: int) -> np.ndarray:
 
     return err
 
+def field_simple_error(ref: GPRDataset, test: GPRDataset, qty_idx: int) -> np.ndarray:
+    """
+    Compute the simple error between *test* and *ref* for one quantity.
+
+    Parameters
+    ----------
+    ref      : reference dataset (e.g. analytical solution)
+    test     : dataset to evaluate (e.g. elfe3D run)
+    qty_idx  : 0 = amplitude, 1 = phase, 2 = real, 3 = imaginary
+
+    Returns
+    -------
+    err : np.ndarray, same length as test.r
+    """
+    ref_data  = ref.field(qty_idx)
+    test_data = test.field(qty_idx)
+
+    # Interpolate reference onto test grid if receiver positions differ
+    if len(ref.r) != len(test.r) or not np.allclose(ref.r, test.r):
+        ref_data = np.interp(test.r, ref.r, ref_data)
+
+    if qty_idx in (0, 2, 3):   # normalised
+        with np.errstate(divide="ignore", invalid="ignore"):
+            err = np.abs(test_data - ref_data)
+            err[~np.isfinite(err)] = np.nan
+    else:                       # absolute (phase)
+        err = test_data - ref_data
+
+    return err
+
 
 def all_errors(
     ref: GPRDataset,

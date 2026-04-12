@@ -26,7 +26,7 @@ import matplotlib.patheffects as pe
 from matplotlib.ticker import FixedLocator, FixedFormatter
 
 from fieldreader import GPRDataset, QUANTITIES
-from postprocess import field_error, error_stats
+from postprocess import field_error, error_stats, field_simple_error
 
 
 # ---------------------------------------------------------------------------
@@ -215,6 +215,67 @@ class ReceiverLineErrorPlot:
             ax.axhline(0, linestyle="--", linewidth=0.8, color="gray")
             ax.set_title(
                 f"Normalized Error in {title}" if j != 1 else f"Error in {title}",
+                fontsize=self.font["label"], fontweight="bold",
+            )
+            ax.set_ylabel("Error", fontsize=self.font["label"])
+            ax.tick_params(labelsize=self.font["tick"])
+            ax.grid(True, which="both" if j != 1 else "major", linestyle="--", linewidth=0.5)
+            if j // 2 == 1:
+                ax.set_xlabel("Distance (m)", fontsize=self.font["label"])
+                _auto_xticks(ax, self.reference.r)
+            if j == 3:
+                ax.legend(fontsize=self.font["legend"])
+
+        fig.suptitle(suptitle, fontsize=self.font["suptitle"], fontweight="bold")
+        plt.tight_layout(rect=[0, 0, 1, 0.96])
+        _save(fig, output_dir, fname)
+        return fig
+
+
+# ---------------------------------------------------------------------------
+# 2. ReceiverLineSimpleErrorPlot  –  2×2 errors
+# ---------------------------------------------------------------------------
+
+class ReceiverLineSimpleErrorPlot:
+    """
+    2×2 grid showing errors of each dataset relative to a reference.
+    Fixed sources are skipped automatically.
+    """
+
+    def __init__(
+        self,
+        datasets:   list[GPRDataset],
+        reference:  GPRDataset,
+        quantities: list[tuple] = None,
+        base_lw:    float = 2.5,
+        font:       dict = None,
+        figsize:    tuple = (12, 8),
+    ):
+        self.datasets   = datasets
+        self.reference  = reference
+        self.quantities = quantities or QUANTITIES
+        self.styles     = _build_styles(datasets, base_lw)
+        self.font       = {"suptitle": 24, "label": 18, "tick": 18, "legend": 15, **(font or {})}
+        self.figsize    = figsize
+
+    def plot(self, suptitle: str = "", output_dir: str = None, fname: str = None) -> plt.Figure:
+        var_ds = [ds for ds in self.datasets if not self.styles[ds.label]["is_fixed"]]
+
+        fig, axes = plt.subplots(2, 2, figsize=self.figsize, sharex=True)
+
+        for j, (title, _) in enumerate(self.quantities):
+            ax = axes[j // 2, j % 2]
+            fn = ax.semilogy if j != 1 else ax.plot
+
+            for ds in var_ds:
+                err = field_simple_error(self.reference, ds, j)
+                st  = self.styles[ds.label]
+                fn(ds.r, err, label=st["label"], color=st["color"],
+                   linestyle=st["linestyle"], linewidth=st["linewidth"], zorder=st["zorder"])
+
+            ax.axhline(0, linestyle="--", linewidth=0.8, color="gray")
+            ax.set_title(
+                f"Error in {title}" if j != 1 else f"Error in {title}",
                 fontsize=self.font["label"], fontweight="bold",
             )
             ax.set_ylabel("Error", fontsize=self.font["label"])
@@ -484,6 +545,76 @@ class ErrorHistogramPlot:
         plt.tight_layout(rect=[0, 0, 1, 0.96])
         _save(fig, output_dir, fname)
         return fig
+    
+
+# ---------------------------------------------------------------------------
+# 5. ErrorHistogramPlot  –  1×2 amplitude + phase histograms
+# ---------------------------------------------------------------------------
+
+class SimpleErrorHistogramPlot:
+    """
+    1×2 histogram of amplitude (log-spaced bins, %) and phase errors.
+    Legend shows mean, std, and max for each dataset.
+    """
+
+    def __init__(
+        self,
+        datasets:  list[GPRDataset],
+        reference: GPRDataset,
+        base_lw:   float = 2.5,
+        font:      dict = None,
+        figsize:   tuple = (12, 4),
+    ):
+        self.datasets  = datasets
+        self.reference = reference
+        self.styles    = _build_styles(datasets, base_lw)
+        self.font      = {"suptitle": 27, "label": 18, "tick": 18, "legend": 10, **(font or {})}
+        self.figsize   = figsize
+
+    def plot(self, suptitle: str = "", output_dir: str = None, fname: str = None) -> plt.Figure:
+        fig, axes = plt.subplots(1, 2, figsize=self.figsize)
+
+        for ds in self.datasets:
+            st        = self.styles[ds.label]
+            amp_err   = field_simple_error(self.reference, ds, 0)
+            phase_err = field_simple_error(self.reference, ds, 1)
+
+            # amplitude
+            ax  = axes[0]
+            fin = amp_err[np.isfinite(amp_err)]
+            pos = fin[fin > 0]
+            bins = np.logspace(np.log10(pos.min()), np.log10(pos.max()), 40)
+            m, s, mx = error_stats(amp_err)
+            lbl = f"{m*100:.2f}%,  {s*100:.2f}%,  {mx*100:.2f}%"
+            ax.hist(fin, bins=bins, color=st["color"], alpha=0.7, label=lbl)
+            ax.set_xscale("log")
+            ax.set_title("Histogram of Abs. Error\nAmplitude (Ex)",
+                         fontsize=self.font["label"], fontweight="bold")
+            ax.set_xlabel("Absolute Normalised Error", fontsize=self.font["label"])
+            ax.set_ylabel("Count", fontsize=self.font["label"])
+            ax.tick_params(labelsize=self.font["tick"])
+            ax.grid(True, linestyle="--", linewidth=0.5)
+            ax.legend(fontsize=self.font["legend"], title="mean,  std,  max")
+
+            # phase
+            ax  = axes[1]
+            fin = phase_err[np.isfinite(phase_err)]
+            m, s, mx = error_stats(phase_err)
+            lbl = f"{m:.4f},  {s:.4f},  {mx:.4f}"
+            ax.hist(fin, bins=40, color=st["color"], alpha=0.7, label=lbl)
+            ax.set_title("Histogram of Error\nPhase (Ex)",
+                         fontsize=self.font["label"], fontweight="bold")
+            ax.set_xlabel("Error (rad)", fontsize=self.font["label"])
+            ax.set_ylabel("Count", fontsize=self.font["label"])
+            ax.tick_params(labelsize=self.font["tick"])
+            ax.grid(True, linestyle="--", linewidth=0.5)
+            ax.legend(fontsize=self.font["legend"], title="mean,  std,  max")
+
+        fig.suptitle(suptitle, fontsize=self.font["suptitle"], fontweight="bold")
+        plt.tight_layout(rect=[0, 0, 1, 0.96])
+        _save(fig, output_dir, fname)
+        return fig
+
 
 
 # ---------------------------------------------------------------------------
