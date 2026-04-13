@@ -227,6 +227,7 @@ def compute_full_field(
 
     return np.array(results)
 
+
 # -----------------------------
 # Usage
 # -----------------------------
@@ -237,7 +238,7 @@ freqs = [freq]
 
 # Geometry (meters)
 r_s = np.array([0.0, 0.0, 0.025])   # Dipole source 2.5 cm above the surface
-r_c = np.array([0.0, 0.0, -0.7]) #@TODO: Need to fix to match elfe3D_GPR later.
+r_c = np.array([0.0, 0.0, -0.7])    # @TODO: Need to fix to match elfe3D_GPR later.
 
 # Medium properties
 eps_bg = 4.0
@@ -315,7 +316,7 @@ with open('endfire_electric_field.csv', 'w', newline='') as csvfile:
                E_endfire[0, i, 2].real, E_endfire[0, i, 2].imag]
         writer.writerow(row)
 
-print("Data saved to inline_electric_field.csv and endfire_electric_field.csv")
+print("Data saved to broadside_electric_field.csv and endfire_electric_field.csv")
 
 # Create three subplots, one for each measurement (inline and endfire)
 

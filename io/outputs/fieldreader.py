@@ -128,6 +128,80 @@ class AnalyticalLoader:
     def oblique(self)   -> GPRDataset: return self.load_all()[2]
 
 
+class CSVFieldLoader:
+    """
+    Load a generic CSV field dataset with arbitrary column headers.
+
+    Extracts field components (Ex, Ey, Ez) in real/imaginary form and computes
+    amplitude and phase for each component. Supports any CSV with headers.
+
+    Parameters
+    ----------
+    filepath       : path to the CSV file
+    label          : legend label for this dataset
+    distance_col   : name of the distance/position column
+    orientation    : 'Endfire', 'Broadside', or 'Oblique'
+    """
+
+    def __init__(
+        self,
+        filepath:      str,
+        label:         str,
+        distance_col:  str = "Distance (m)",
+        orientation:   str = "Endfire",
+    ):
+        self.filepath      = filepath
+        self.label         = label
+        self.distance_col  = distance_col
+        self.orientation   = orientation
+        self._data: Optional[np.ndarray] = None
+        self._headers: Optional[list[str]] = None
+
+    def _load(self) -> tuple[np.ndarray, list[str]]:
+        if self._data is None:
+            with open(self.filepath, 'r') as f:
+                self._headers = f.readline().strip().split(',')
+            self._data = np.loadtxt(self.filepath, delimiter=",", skiprows=1)
+        return self._data, self._headers
+
+    def _get_component(self, component: str) -> GPRDataset:
+        """Extract Ex, Ey, or Ez as a GPRDataset."""
+        d, headers = self._load()
+        
+        real_col = f"{component}_real"
+        imag_col = f"{component}_imag"
+        
+        if real_col not in headers or imag_col not in headers:
+            raise ValueError(f"Columns '{real_col}' and '{imag_col}' not found in CSV")
+        
+        r_idx = headers.index(self.distance_col)
+        re_idx = headers.index(real_col)
+        im_idx = headers.index(imag_col)
+        
+        r = d[:, r_idx]
+        re = d[:, re_idx]
+        im = d[:, im_idx]
+        
+        amp = np.sqrt(re**2 + im**2)
+        phase = np.arctan2(im, re)
+        
+        return GPRDataset(amp, phase, re, im, self.orientation, r, 
+                            f"{self.label} ({component})")
+
+    def ex(self) -> GPRDataset:
+        return self._get_component("Ex")
+
+    def ey(self) -> GPRDataset:
+        return self._get_component("Ey")
+
+    def ez(self) -> GPRDataset:
+        return self._get_component("Ez")
+
+    def all_components(self) -> list[GPRDataset]:
+        """Return [Ex, Ey, Ez]."""
+        return [self.ex(), self.ey(), self.ez()]
+
+
 # ---------------------------------------------------------------------------
 # elfe3D output loader
 # ---------------------------------------------------------------------------

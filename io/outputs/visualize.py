@@ -291,6 +291,11 @@ class ReceiverLineSimpleErrorPlot:
         plt.tight_layout(rect=[0, 0, 1, 0.96])
         _save(fig, output_dir, fname)
         return fig
+    
+    def errors(self) -> dict[str, np.ndarray]:
+        var_ds = [ds for ds in self.datasets if not self.styles[ds.label]["is_fixed"]]
+        return {ds.label: {self.quantities[j][0]: field_simple_error(self.reference, ds, j)
+                           for j in range(4)} for ds in var_ds}
 
 
 # ---------------------------------------------------------------------------
