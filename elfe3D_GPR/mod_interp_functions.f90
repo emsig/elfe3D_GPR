@@ -1,6 +1,7 @@
-!> @brief
-!> Module of elfe3d containing subroutines to to calculate coefficients 
-!> for interpolation functions and element characteristics
+!> \file mod_interp_functions.f90
+!> \brief Module of elfe3d containing interpolation and element geometry routines
+!> \details Computes coefficients for linear edge-based interpolation functions,
+!> \details element volumes, and edge lengths required by local matrix assembly.
 !!
 !> written by Paula Rulff, 27/08/2018
 !!
@@ -29,23 +30,31 @@ module interp_functions
 contains
 
   !---------------------------------------------------------------------
-  !> @brief
-  ! subroutine for calculating coefficients for linear interpolation 
-  ! functions beween nodes
-  ! and abcd_start & abcd_end matrices M times 6 each
+  !> \brief Calculate coefficient matrices for linear interpolation functions on tetrahedral elements
+  !> \param[in] M Number of elements
+  !> \param[in] x X coordinates of element nodes
+  !> \param[in] y Y coordinates of element nodes
+  !> \param[in] z Z coordinates of element nodes
+  !> \param[out] a Local coefficient matrix for nodes
+  !> \param[out] b Local coefficient matrix for nodes
+  !> \param[out] c Local coefficient matrix for nodes
+  !> \param[out] d Local coefficient matrix for nodes
+  !> \param[out] a_start Start coefficients for edge shape functions
+  !> \param[out] a_end End coefficients for edge shape functions
+  !> \param[out] b_start Start coefficients for edge shape functions
+  !> \param[out] b_end End coefficients for edge shape functions
+  !> \param[out] c_start Start coefficients for edge shape functions
+  !> \param[out] c_end End coefficients for edge shape functions
+  !> \param[out] d_start Start coefficients for edge shape functions
+  !> \param[out] d_end End coefficients for edge shape functions
   !---------------------------------------------------------------------
   subroutine calc_abcd (M, x, y, z, a, b, c, d, &
        a_start, a_end, b_start, b_end, c_start, c_end, d_start, d_end)
 
-    ! INPUT
-    ! total number of elements
     integer, intent(in) :: M
-    ! coordinates of 4 nodes for all M elements
     real(kind=dp), dimension(:,:), intent(in) :: x,y,z ! (1:M,1:4)
 
     ! OUTPUT
-    ! coefficients for linear shape functions determined by 4 nodes of 
-    ! all M elements
     real(kind=dp), allocatable, dimension(:,:), intent(out) :: a,b,c,d
     real(kind=dp), allocatable, dimension(:,:), intent(out) :: &
           a_start, a_end, b_start, b_end, c_start, c_end, d_start, d_end
@@ -197,17 +206,18 @@ contains
   end subroutine calc_abcd
 
   !---------------------------------------------------------------------
-  !> @brief
-  ! subroutine to calculate the volume of each element
+  !> \brief Calculate the volume of each tetrahedral element
+  !> \param[in] M Number of elements
+  !> \param[in] x X coordinates of element nodes
+  !> \param[in] y Y coordinates of element nodes
+  !> \param[in] z Z coordinates of element nodes
+  !> \param[out] ve Element volume array of length M
   !---------------------------------------------------------------------
   subroutine calc_vol (M, x, y, z, ve)
 
-    ! INPUT
-    ! total number of elements
     integer, intent(in) :: M
     real(kind=dp), dimension (:,:), intent(in) :: x, y, z ! (1:M,1:4)
 
-    ! OUTPUT
     real(kind=dp), allocatable, dimension(:), intent(out) :: ve
 
     ! LOCAL variables
@@ -227,19 +237,24 @@ contains
   end subroutine calc_vol
 
   !---------------------------------------------------------------------
-  !> @brief
-  ! Subroutine to calculate the edge lengths
+  !> \brief Calculate edge lengths for element edges and global mesh edges
+  !> \param[in] M Number of elements
+  !> \param[in] E Number of edges
+  !> \param[in] nd Node coordinate array for the global mesh
+  !> \param[in] ed2nd Edge node connectivity array
+  !> \param[in] x Element node x coordinates
+  !> \param[in] y Element node y coordinates
+  !> \param[in] z Element node z coordinates
+  !> \param[out] el2edl Local edge lengths for each element
+  !> \param[out] edl Global edge length array of length E
   !---------------------------------------------------------------------
   subroutine calc_edge_length (M, E, nd, ed2nd, x, y, z, el2edl, edl)
 
-    ! INPUT
-    ! total number of elements
     integer, intent(in) :: M,E
     real(kind=dp), dimension(:,:), intent(in) :: x, y, z ! (1:M,1:4)
     real(kind=dp), dimension(:,:), intent(in) :: nd 
     integer, dimension(:,:), intent(in) :: ed2nd
 
-    ! OUTPUT
     real(kind=dp), allocatable, dimension(:,:), intent(out) :: el2edl
     real(kind=dp), allocatable, dimension(:), intent(out) :: edl
 

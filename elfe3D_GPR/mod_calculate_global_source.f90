@@ -1,6 +1,8 @@
-!> @brief
-!> Module of elfe3D containing subroutines to obtain source arrays
-!> for dipole and loop sources
+!> \file mod_calculate_global_source.f90
+!> \brief Module of elfe3D containing routines to assemble global source vectors
+!> \details Detects source edges and orientations for dipole and loop source geometries
+!> \details and writes them into the global source term used by the finite-element system.
+!> \author Paula Rulff
 !!
 !> written by Paula Rulff, 23/07/2019, extended 04/2020
 !!
@@ -31,10 +33,16 @@ module calculate_global_source
 contains
 
   !---------------------------------------------------------------------
-  !> @brief
-  !> subroutine for detecting source edges and their directions
-  !> for x-directed electric dipole source 
-  !> store it in global vector "source" with +/- 1
+  !> \brief Detects source edges for an x-directed electric dipole and writes source sign into the global source vector
+  !> \param[in] E Number of edges in the mesh
+  !> \param[in] direction Current direction index (0 = positive, 1 = negative)
+  !> \param[in] nd Node coordinate array
+  !> \param[in] ed2nd Edge node connectivity array
+  !> \param[in] sx_start Start x-coordinate for the dipole source edge
+  !> \param[in] sy_start Start y-coordinate for the dipole source edge
+  !> \param[in] sz_start Start z-coordinate for the dipole source edge
+  !> \param[in] sx_end End x-coordinate for the dipole source edge
+  !> \param[in,out] source Global source vector updated with edge orientation signs
   !---------------------------------------------------------------------
   subroutine HED_x (E, direction, nd, ed2nd, &
                     sx_start, sy_start, sz_start, sx_end, source)
@@ -96,10 +104,16 @@ contains
   end subroutine HED_x
 
   !---------------------------------------------------------------------
-  !> @brief
-  !> subroutine for detecting source edges and their directions
-  !> for y-directed electric dipole source
-  !> stores it in global vector "source" with +/- 1
+  !> \brief Detects source edges for a y-directed electric dipole and writes source sign into the global source vector
+  !> \param[in] E Number of edges in the mesh
+  !> \param[in] direction Current direction index (0 = positive, 1 = negative)
+  !> \param[in] nd Node coordinate array
+  !> \param[in] ed2nd Edge node connectivity array
+  !> \param[in] sx_start X-coordinate for the dipole source edge
+  !> \param[in] sy_start Start y-coordinate for the dipole source edge
+  !> \param[in] sz_start Z-coordinate for the dipole source edge
+  !> \param[in] sy_end End y-coordinate for the dipole source edge
+  !> \param[in,out] source Global source vector updated with edge orientation signs
   !---------------------------------------------------------------------
   subroutine HED_y (E, direction, nd, ed2nd, &
                     sx_start, sy_start, sz_start, sy_end, source)
@@ -161,10 +175,17 @@ contains
   end subroutine HED_y
 
   !---------------------------------------------------------------------
-  !> @brief
-  !>  subroutine for detecting source edges and their directions
-  !> for a horizontal square-loop source 
-  !> stores it in global vector "source" with +/- 1
+  !> \brief Detects source edges for a horizontal square-loop source and writes source orientation into the global source vector
+  !> \param[in] E Number of edges in the mesh
+  !> \param[in] direction Loop current direction (0 = clockwise, 1 = anticlockwise)
+  !> \param[in] midp_source Loop midpoint coordinates (x,y,z)
+  !> \param[in] nd Node coordinate array
+  !> \param[in] ed2nd Edge node connectivity array
+  !> \param[in] sx_start X-coordinate of the loop start edge
+  !> \param[in] sy_start Y-coordinate of the loop start edge
+  !> \param[in] sz_start Z-coordinate of the loop source plane
+  !> \param[in] sx_end X-coordinate of the loop end edge
+  !> \param[in,out] source Global source vector updated with loop edge signs
   !---------------------------------------------------------------------
   subroutine loop_source (E, direction, midp_source, nd, ed2nd, &
                           sx_start, sy_start, sz_start, sx_end, source)
@@ -258,11 +279,14 @@ contains
   end subroutine loop_source
 
   !---------------------------------------------------------------------
-  !> @brief
-  !> subroutine for detecting source edges and their directions
-  !> for x-directed arbitrary electric dipole source, store it in
-  !> global vector "source" with +/- 1
-  !> ! might not work for refinement as node markers are used !
+  !> \brief Detect source edges for an x-directed arbitrary electric dipole
+  !> \details Finds edges where both nodes are marked for the source and writes the signed orientation into the global source vector.
+  !> \param[in] E Total number of edges in the mesh
+  !> \param[in] direction Current direction index (0 = positive, 1 = negative)
+  !> \param[in] nodemarker Node markers used for source identification
+  !> \param[in] nd Node coordinate array
+  !> \param[in] ed2nd Edge-to-node connectivity array
+  !> \param[in,out] source Global source vector updated with signed edge values
   !---------------------------------------------------------------------
   subroutine arbitrary_HED_x (E, direction, nodemarker, nd, ed2nd, &
                               source)
@@ -315,11 +339,14 @@ contains
   end subroutine arbitrary_HED_x
 
   !---------------------------------------------------------------------
-  !> @brief
-  !> subroutine for detecting source edges and their directions
-  !> for y-directed electric dipole source, store it in
-  !> global vector "source" with +/- 1
-  !> ! might not work for refinement as node markers are used !
+  !> \brief Detect source edges for a y-directed arbitrary electric dipole
+  !> \details Finds y-oriented source edges and stores the edge orientation sign in the global source vector.
+  !> \param[in] E Total number of edges in the mesh
+  !> \param[in] direction Current direction index (0 = positive, 1 = negative)
+  !> \param[in] nodemarker Node markers used for source identification
+  !> \param[in] nd Node coordinate array
+  !> \param[in] ed2nd Edge-to-node connectivity array
+  !> \param[in,out] source Global source vector updated with signed edge values
   !---------------------------------------------------------------------
   subroutine arbitrary_HED_y (E, direction, nodemarker, nd, ed2nd, &
                               source)
@@ -372,10 +399,19 @@ contains
   end subroutine arbitrary_HED_y
 
   !---------------------------------------------------------------------
-  !> @brief
-  !> subroutine for detecting source edges and their directions
-  !> for one straight source segment
-  !> global vector "source" with +/- 1
+  !> \brief Detect source edges for a straight source segment
+  !> \details Identifies the mesh edges aligned with a straight source segment and assigns oriented source signs in the global vector.
+  !> \param[in] E Total number of edges in the mesh
+  !> \param[in] direction Current direction index (0 = positive, 1 = negative)
+  !> \param[in] nd Node coordinate array
+  !> \param[in] ed2nd Edge-to-node connectivity array
+  !> \param[in] sx_start Source start x-coordinate
+  !> \param[in] sy_start Source start y-coordinate
+  !> \param[in] sz_start Source start z-coordinate
+  !> \param[in] sx_end Source end x-coordinate
+  !> \param[in] sy_end Source end y-coordinate
+  !> \param[in] sz_end Source end z-coordinate
+  !> \param[in,out] source Global source vector updated with signed edge values
   !---------------------------------------------------------------------
   subroutine straight_source_segment (E, direction, nd, ed2nd, &
                                       sx_start, sy_start, sz_start, &
@@ -533,7 +569,7 @@ contains
   end subroutine straight_source_segment
 
   !---------------------------------------------------------------------
-  !> @brief
+  !> \brief
   !> subroutine for detecting  the minimum distance of a point (cp)
   !> to a line-segment defined by two points (p1,p2)
   !---------------------------------------------------------------------
@@ -583,12 +619,14 @@ contains
 
 
   !---------------------------------------------------------------------
-  !> @brief
-  !> subroutine for detecting source edges and their directions
-  !> for a segmented line or loop source
-  !> global vector source with +/- 1
-  !> The file: 'in/source.txt' has to be provided
-  !> best imeplemented option 
+  !> \brief Detect source edges for a segmented source representation
+  !> \details Reads segmented source data from `in/source.txt` and assigns oriented source signs for each mesh edge.
+  !> \param[in] E Total number of edges in the mesh
+  !> \param[in] direction Current direction index
+  !> \param[in] nd Node coordinate array
+  !> \param[in] ed2nd Edge-to-node connectivity array
+  !> \param[in] CSTYPE Source type code for segmented sources
+  !> \param[in,out] source Global source vector updated with signed edge values
   !---------------------------------------------------------------------
   subroutine segmented_source (E, direction, nd, ed2nd, CSTYPE, source)
 

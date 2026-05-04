@@ -1,5 +1,13 @@
-!> @brief
-!> Main module of elfe3D_GPR
+!> \file elfe3d_gpr.f90
+!> \brief Main program of elfe3D_GPR
+!!
+!> \details Main executable for 3D ground-penetrating radar (GPR) forward modeling.
+!> \details Reads TetGen mesh input files, assembles the finite-element system,
+!> \details applies boundary conditions, optionally performs refinement, solves
+!> \details the linear system with MUMPS, and computes field components at receivers.
+!!
+!> \author Paula Rulff and Chaitanya Dinesh Singh
+!> \since 2018
 !!
 !> Developed by Paula Rulff and Chaitanya Dinesh Singh, started 16/07/2018
 !> Last change: July 2025
@@ -149,7 +157,7 @@ program elfe3d_gpr
   ! Declaration of array for element attributes M times 1
   integer, allocatable, dimension(:) :: eleattr
 
-  ! new in elfe3D_GPR, @PR: element centroids, array of size M times 3
+  !> \note New in elfe3D_GPR: element centroids, array of size M times 3
   real (kind=dp), allocatable, dimension(:,:) :: elem_centr
 
   ! Declaration of coordinate matrices and linear interpolation
@@ -166,15 +174,15 @@ program elfe3d_gpr
   ! Region attributes, model parameters
   real(kind=dp), allocatable, dimension(:) :: rho, mu, eps, mu_r
 
-  ! new in elfe3D_GPR, @CS: High-Frequency specific effective permittivity
+  !> \note New in elfe3D_GPR: High-frequency specific effective permittivity
   complex(kind=dp), allocatable, dimension(:) :: epsilon_r_eff
 
-  ! new in elfe3D_GPR, @CS: High-Frequency specific wavenumber
+  !> \note New in elfe3D_GPR: High-frequency specific wavenumber
   real(kind=dp) :: k_0 ! free space wave number
   complex(kind=dp), allocatable, dimension(:) :: k_bg ! complete mesh wavenumbers
 
   ! Declaration of local stiffness and mass matrix K, MM
-  ! new in elfe3D_GPR, @CS: made complex for complex material parameters
+  !> \note New in elfe3D_GPR: made complex for complex material parameters
   complex(kind=dp), allocatable, dimension(:,:) :: K, MM
 
   ! Declaration of local left-handside matrix AA
@@ -202,23 +210,23 @@ program elfe3d_gpr
   ! Surface edges vector and PEC edges vector
   integer, allocatable, dimension(:) :: s_edges, PEC_edges
 
-  ! new in elfe3D_GPR, @CS: PML parameters
+  !> \note New in elfe3D_GPR: PML parameters
   integer :: PML_present
   real(kind=dp) :: PML_thickness
   integer :: PML_decay_type ! 1: Simple Reciprocal, 2: Logarithmic, 3: Exponential, 4: Polynomial
 
-  ! new in elfe3D_GPR, @CS: PML elements and type
+  !> \note New in elfe3D_GPR: PML elements and type
   integer :: num_PML_elements, num_non_PML_elements
   integer, allocatable, dimension(:) :: PML_elements      ! element numbers containing PML
   integer, allocatable, dimension(:) :: non_PML_elements  ! element numbers not containing PML
   integer, allocatable, dimension(:,:) :: PML_type        ! which of the three components get stretched at which element
 
-  ! new in elfe3D_GPR, @CS: PML stretching functions: 
-  ! For all elements, all components of the tensor
+  !> \note New in elfe3D_GPR: PML stretching functions
+  !> For all elements, all components of the tensor
   complex(kind=dp), allocatable, dimension(:,:) :: LAMBDA, LAMBDA_inv
 
-  ! new in elfe3D_GPR, @CS: complex stretched factors for local matrices: 
-  ! Per element, all components of the tensor
+  !> \note New in elfe3D_GPR: complex stretched factors for local matrices
+  !> Per element, all components of the tensor
   complex(kind=dp), allocatable, dimension(:) :: LAMBDA_l, LAMBDA_inv_l
   ! check per element to see if an element is in the PML or not
   integer :: stretched_element
@@ -257,11 +265,9 @@ program elfe3d_gpr
   complex(kind=dp), dimension(3) :: E_rec1 
   ! Vector containing Hx,Hy and Hz component at receiver site
   complex(kind=dp), dimension(3) :: H_rec1 
-  ! new in elfe3D_GPR, @PR
-  ! array containing domain E field components at element centroids
+  !> \note New in elfe3D_GPR: array containing domain E field components at element centroids
   complex(kind=dp), allocatable, dimension(:,:) :: domain_Efields
-  ! new in elfe3D_GPR, @PR
-  ! array containing domain H field components at element centroids
+  !> \note New in elfe3D_GPR: array containing domain H field components at element centroids
   complex(kind=dp), allocatable, dimension(:,:) :: domain_Hfields
   
   ! Receiver coordinates
@@ -322,8 +328,7 @@ program elfe3d_gpr
   integer :: refStrategy
   character(len = 50) :: StringStep, StringEnding
 
-  ! new in elfe3D_GPR, @PR:
-  ! input information - domain field components to be saved in vtk file
+  !> \note New in elfe3D_GPR: input information - domain field components to be saved in VTK file
   integer :: fields_vtk
 
   ! time testing
@@ -373,7 +378,7 @@ program elfe3d_gpr
   terminationCrit = 0
 
   ! Open Output files
-  ! fields_vtk new in elfe3D_GPR, @PR
+  !> \note New in elfe3D_GPR: fields_vtk controls VTK output generation
   call define_output(EFile, HFile, num_rec, fields_vtk)
   open (unit = (50+1), file = trim(EFile)//".txt") ! electric fields
   open (unit = (50+2), file = trim(HFile)//".txt") ! magnetic fields
@@ -382,7 +387,7 @@ program elfe3d_gpr
   ! magnetic fields ordered along receiver line
   open (unit = (50+4), file = trim(HFile)//"_receiver_line.txt") 
 
-  ! new in elfe3D_GPR, @PR
+  !> \note New in elfe3D_GPR
   call Write_Message (log_unit, &
      'Your output files will be generated in: /out')
   if (fields_vtk == 1) then
@@ -474,12 +479,12 @@ program elfe3d_gpr
   ! Get region attributes from eleattr and assign to model parameters
   call read_model_param(eleattr, M, rho, mu, eps)
 
-  ! new in elfe3D_GPR, @CS: High-Frequency specific effective permittivity
+  !> \note New in elfe3D_GPR: high-frequency specific effective permittivity
   allocate (epsilon_r_eff(M), stat = allo_stat)
   call allocheck(log_unit, allo_stat, &
                  "error allocating array epsilon_r_eff")
 
-  ! new in elfe3D_GPR, @PR: High-Frequency specific wave number
+  !> \note New in elfe3D_GPR: high-frequency specific wave number
   allocate (k_bg(M), stat = allo_stat)
   call allocheck(log_unit, allo_stat, &
                  "error allocating array k_bg")
@@ -577,7 +582,7 @@ program elfe3d_gpr
                           PEC_edges, num_PEC_edges)
   end if
 
-  ! new in elfe3D_GPR, @CS: Check if PML is present and detect which of face/edge/vertex it lies
+  !> \note New in elfe3D_GPR: check if PML is present and detect whether it lies on faces, edges, or vertices
   call Write_Message (log_unit, 'Check if PML present')
   call define_PML (PML_present, PML_thickness, PML_decay_type)
   
@@ -619,7 +624,7 @@ program elfe3d_gpr
   frequency_loop: do numfreq = 1,Nfreq
 
     ! defining all required frequency dependent electromagnetic parameters
-    ! new in elfe3D_GPR, @CS: all parameters except w, which was already defined
+    !> \note New in elfe3D_GPR: define all frequency-dependent electromagnetic parameters except w, which was previously defined
      w = 2.0_dp*pi*freq(numfreq)
      k_0 = w*sqrt(mu_0*epsilon_0)
      epsilon_r_eff = cmplx(eps/epsilon_0, -(1.0_dp/(w*rho*epsilon_0)), kind=dp)
@@ -630,7 +635,7 @@ program elfe3d_gpr
      print *, 'Loop for frequency',freq(numfreq),'[Hz]'
      call Write_Message (log_unit, '**********************************')
 
-     ! new in elfe3D_GPR, @CS: Evalute the stretching effect in the PML at current frequency
+     !> \note New in elfe3D_GPR: evaluate the stretching effect in the PML at the current frequency
      if (PML_present == 1) then
 
       call Write_Message (log_unit, 'Evaluating PML complex stretching factors')
@@ -680,7 +685,7 @@ program elfe3d_gpr
      Agcoo = ZEROW
      NNZ = 1
 
-     ! new in elfe3D_GPR @CS: allocate local stretching factors
+     !> \note New in elfe3D_GPR: allocate local stretching factors for PML computations
      if (PML_present == 1) then
        allocate(LAMBDA_l(3), LAMBDA_inv_l(3), stat = allo_stat)
        call allocheck(log_unit, allo_stat, "error allocating local stretching factors")
@@ -693,12 +698,12 @@ program elfe3d_gpr
      matrix_element_loop: do l = 1,M
 
         stretched_element = 0
-        ! new in version 1.2.0, @CS, PML Segment
+        !> \note New in version 1.2.0: PML element segmentation and handling
         if (PML_present == 1) then
 
 
-          ! new in elfe3D_GPR, @CS: initialising local stretching factors to 
-          ! default value corresponding to no stretching
+          !> \note New in elfe3D_GPR: initialise local stretching factors to
+          !> default values corresponding to no stretching
           LAMBDA_l = ZEROW
           LAMBDA_inv_l = ZEROW
 
@@ -710,12 +715,12 @@ program elfe3d_gpr
               LAMBDA_l = LAMBDA(p_l,1:3)
               LAMBDA_inv_l = LAMBDA_inv(p_l,1:3)
             
-              ! new in elfe3D_GPR, @CS: PML specific local K matrix
+              !> \note New in elfe3D_GPR: PML-specific local stiffness matrix
               call calc_stiffness_matrix_anisotropic_PML (l, el2edl, Ve, ed_sign, &
                 b_start, b_end, c_start, c_end, d_start, d_end, &
                 mu_r, LAMBDA_inv_l, K)
 
-              ! new in elfe3D_GPR, @CS: PML specific local M matrix
+              !> \note New in elfe3D_GPR: PML-specific local mass matrix
               call calc_mass_matrix_anisotropic_PML (l, el2edl, Ve, ed_sign, b, c, d, k_0, epsilon_r_eff, LAMBDA_l, MM)
               exit
             end if
@@ -723,13 +728,13 @@ program elfe3d_gpr
 
           if (stretched_element == 0) then
             ! Calculating stiffness matrix Kij for a single element 
-            ! modified in elfe3D_GPR, @CS: evaluates the integral along with the model parameter scaling
+            !> \note Modified in elfe3D_GPR: evaluates the integral together with model parameter scaling
             call calc_stiffness_matrix (l, el2edl, Ve, ed_sign, &
               b_start, b_end, c_start, c_end, d_start, d_end, &
               mu_r, K)
 
             ! Calculating mass matrix MMij for a single element
-            ! modified in elfe3D_GPR, @CS: evaluates the integral along with the model parameter scaling
+            !> \note Modified in elfe3D_GPR: evaluates the integral together with model parameter scaling
             call calc_mass_matrix (l, el2edl, Ve, ed_sign, b, c, d, k_0, epsilon_r_eff, MM)
           end if
 
@@ -748,8 +753,7 @@ program elfe3d_gpr
 
         ! Calculating local lefthandside matrix AAij = Kij-MMij
         ! for a single element 
-        ! simplied in elfe3D_GPR, @CS: 
-        ! since the model parameters are already included in the matrices
+        !> \note Simplified in elfe3D_GPR: model parameters are already included in the matrices
         AA = K - MM
 
         ! check if matrix contains NaN elements, 
@@ -1224,11 +1228,7 @@ program elfe3d_gpr
 
        end do receiver_loop
 
-       ! new in elfe3D_GPR, @PR
-       ! obtain fields for first frequency
-       ! at all element centroids
-       ! if fields should be put into .vtk file 
-       ! as specified in input file
+       !> \note New in elfe3D_GPR: obtain fields for the first frequency at all element centroids if VTK output is enabled
        if (fields_vtk == 1 .and. numfreq == 1) then
           call Write_Message(log_unit, '***********************************************************')
           call Write_Message(log_unit, 'Writing Volumetric Field Distribution in Entire Domain Now')

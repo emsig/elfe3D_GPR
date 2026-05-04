@@ -1,5 +1,8 @@
-!> @brief
-!> Module of elfe3d containing definitions of constants
+!> \file mod_constant.f90
+!> \brief Module of elfe3d containing definitions of global constants
+!> \details Defines numerical kinds, physical constants, and project-wide
+!> \details precision parameters used by all finite-element and solver modules.
+!> \author Paula Rulff and Thomas Kalscheuer
 !!
 !> written by Paula Rulff and Thomas Kalscheuer, 
 !> 23/07/2019, extended 04/2020 and 05/2025
@@ -27,35 +30,37 @@ module mod_constant
 
   implicit none
 
-  ! loog-file unit-number
+  !> \brief Log-file unit-number
   integer, parameter, public :: log_unit = 999
-  ! save screen output to log file?
+  !> \brief Save screen output to log file?
   logical, parameter :: LOGFILE_SCREEN = .true.
 
-  ! kind type parameters
+  !> \brief Kind type parameters
   integer, parameter, public :: ssp = kind(1.0), &
        dp = selected_real_kind(2*precision(1.0_ssp))
 
-  ! double parameters
+  !> \brief Double precision parameters
   real(kind=dp), parameter, public :: D0 = 0.0_dp
   real(kind=dp), parameter, public :: D1 = 1.0_dp
   real(kind=dp), parameter, public :: D2 = 2.0_dp
   real(kind=dp), parameter, public :: D10 = 10.0_dp
   complex(kind=dp), parameter, public :: ZEROW = cmplx(D0, D0, kind=dp)
 
-  ! mathematical and physical constants
-  real(kind=dp), parameter, public :: pi = D2*asin(D1)   ! 3.14159265359
-  ! natural log of 10
+  !> \brief Mathematical and physical constants
+  !> \brief Pi, the mathematical constant (3.14159265359)
+  real(kind=dp), parameter, public :: pi = D2*asin(D1)
+  !> \brief Natural logarithm of 10
   real(kind=dp), parameter, public :: ln_10 = log(D10)
+  !> \brief Double precision epsilon
   real(kind=dp), parameter, public :: eps_dp = abs(epsilon(1.0_dp))
-  ! resistivity of air
+  !> \brief Resistivity of air
   real(kind=dp), parameter, public :: rho_0 = 100000000.0_dp
-  ! electric permittivity of free space
+  !> \brief Electric permittivity of free space
   real(kind=dp), parameter, public :: epsilon_0 = 8.854E-12_dp
-  ! magnetic permeability of free space
+  !> \brief Magnetic permeability of free space
   real(kind=dp), parameter, public :: mu_0 = 4.0E-07_dp*pi
-  ! speed of light in vacuum
+  !> \brief Speed of light in vacuum
   real(kind=dp), parameter, public :: c_0 = 1.0_dp/sqrt(mu_0*epsilon_0)
-  ! new in version elfe3D_GPR, @CS: High-Frequency specific parameters
-  real(kind=dp), parameter, public :: Z_0 = sqrt(mu_0/epsilon_0)  ! impedance of free space
+  !> \brief Impedance of free space (new in version elfe3D_GPR)
+  real(kind=dp), parameter, public :: Z_0 = sqrt(mu_0/epsilon_0)
 end module mod_constant

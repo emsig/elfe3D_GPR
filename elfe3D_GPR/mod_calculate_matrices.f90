@@ -1,6 +1,8 @@
-!> @brief
-!> Module of elfe3D containing subroutines to calculate 
-!> connectivity matrix elements2edges, coordinate matrices, edge signs
+!> \file mod_calculate_matrices.f90
+!> \brief Module of elfe3D containing mesh matrix assembly subroutines
+!> \details Builds element-edge connectivity, coordinate matrices for element geometry,
+!> \details and edge sign matrices that map local edge orientation to the global finite-element system.
+!> \author Paula Rulff
 !!
 !> written by Paula Rulff, 24/08/2018
 !!
@@ -30,25 +32,27 @@ module calculate_matrices
 contains
 
   !---------------------------------------------------------------------
-  !> @brief
-  !> subroutine for calculating connectivity matrix el2ed 
+  !> \brief Subroutine for calculating connectivity matrix el2ed
   !---------------------------------------------------------------------
   subroutine calc_connect_matrix (el2nd, ed2nd, E, M, el2ed)
 
     ! INPUT
-    ! total numbers of edges and elements
+    !> \param[in] E Total number of edges
+    !> \param[in] M Total number of elements
     integer, intent(in) :: E,M
-    ! declaration of array for element nodes
+    !> \param[in] el2nd Array for element nodes
     integer, dimension(:,:), intent(in) :: el2nd ! (1:M,1:4)
-    ! declaration of array for edge nodes
+    !> \param[in] ed2nd Array for edge nodes
     integer, dimension(:,:), intent(in) :: ed2nd ! (1:E,1:2)
 
     ! OUTPUT
-    ! declaration of array for element edges and element edge lengths
+    !> \param[out] el2ed Array for element edges
     integer, allocatable, dimension(:,:), intent(out) :: el2ed
 
     ! LOCAL variables
+    !> \brief Loop indices
     integer :: i,j
+    !> \brief Allocation status
     integer :: allo_stat
     !-------------------------------------------------------------------
     allocate (el2ed(M,6), stat = allo_stat)
@@ -121,19 +125,26 @@ contains
   end subroutine calc_connect_matrix
 
   !---------------------------------------------------------------------
-  !> @brief
-  !>  calculate matrices for coordinates
+  !> \brief Build coordinate arrays for element geometry and element edges
+  !> \param[in] M Number of elements
+  !> \param[in] nd Global node coordinate array
+  !> \param[in] el2nd Element-to-node connectivity array
+  !> \param[out] x X coordinates for each element node
+  !> \param[out] y Y coordinates for each element node
+  !> \param[out] z Z coordinates for each element node
+  !> \param[out] x_start Edge start X coordinates for each element
+  !> \param[out] x_end Edge end X coordinates for each element
+  !> \param[out] y_start Edge start Y coordinates for each element
+  !> \param[out] y_end Edge end Y coordinates for each element
+  !> \param[out] z_start Edge start Z coordinates for each element
+  !> \param[out] z_end Edge end Z coordinates for each element
   !---------------------------------------------------------------------
   subroutine calc_coord_matrices (M, nd, el2nd, x, y, z, &
        x_start, x_end, y_start, y_end, z_start, z_end)
 
-    ! INPUT
-    ! total number of elements
     integer, intent(in) :: M
     real(kind=dp), dimension(:,:), intent(in) :: nd ! (1:N,1:3)
     integer, dimension(:,:), intent(in) :: el2nd ! (1:M,1:4)
-
-    ! OUTPUT
     real(kind=dp), allocatable, dimension (:,:), intent(out) :: x,y,z
     real(kind=dp), allocatable, dimension (:,:), intent(out) :: &
                                                         x_start,x_end, &
@@ -141,7 +152,9 @@ contains
                                                         z_start,z_end
 
     ! LOCAL variables
+    !> \brief Loop index
     integer :: i
+    !> \brief Allocation status
     integer :: allo_stat
 
     !-------------------------------------------------------------------
@@ -209,25 +222,20 @@ contains
   end subroutine calc_coord_matrices
 
   !---------------------------------------------------------------------
-  !> @brief
-  !> calculate matrices for signs that are assigned to the vector shape
-  !> functions of the edges of all elements to compensate for local and
-  !> global directions
+  !> \brief Calculate local edge sign factors for each element
+  !> \details Computes the sign of each edge-based Nedelec shape function so that local and global edge orientations remain consistent.
+  !> \param[in] M Number of elements
+  !> \param[in] el2nd Element-to-node connectivity array
+  !> \param[out] ed_sign Local edge sign array of size (M,6)
   !---------------------------------------------------------------------
   subroutine calc_edge_signs(M, el2nd, ed_sign)
 
-    ! INPUT
-    ! total number of elements
     integer, intent(in) :: M
-    !integer, dimension(:,:), intent(in) :: ed2nd ! (1:E,1:2)
-    !integer, dimension(:,:), intent(in) :: el2ed ! (1:M,1:6)
     integer, dimension(:,:), intent(in) :: el2nd ! (1:M,1:4)
-
-    ! OUTPUT
-    ! array of local edge signs
     real(kind=dp), allocatable, dimension(:,:), intent(out) :: ed_sign
 
     ! LOCAL variables
+    !> \brief Allocation status
     integer :: allo_stat
 
     allocate (ed_sign(M,6), stat = allo_stat)

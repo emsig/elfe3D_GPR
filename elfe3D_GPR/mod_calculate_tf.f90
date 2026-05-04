@@ -1,6 +1,9 @@
-!> @brief
-!> Module of elfe3D containing subroutines to calculate the field
-!> components
+!> \file mod_calculate_tf.f90
+!> \brief Module of elfe3D containing subroutines to calculate field components
+!> \details Provides routines to compute electric and magnetic fields at receiver
+!> \details locations from finite-element solution vectors and to write those
+!> \details fields to VTK output for visualization.
+!> \author Paula Rulff
 !!
 !> written by Paula Rulff, 24/06/2019
 !!
@@ -30,9 +33,28 @@ module calculate_tf
 contains
 
   !---------------------------------------------------------------------
-  !> @brief
-  !> subroutine for calculating electric and magnetic fields at a
-  ! certain receiver location
+  !> \brief Subroutine for calculating electric and magnetic fields at a certain receiver location
+  !> \param[in] u1 Cartesian x-coordinate of current receiver
+  !> \param[in] v1 Cartesian y-coordinate of current receiver
+  !> \param[in] w1 Cartesian z-coordinate of current receiver
+  !> \param[in] rec1_el Current receiver element index
+  !> \param[in] el2ed Element-to-edge mapping array
+  !> \param[in] S Finite-element solution vector
+  !> \param[in] a_start Start coefficients for shape functions
+  !> \param[in] a_end End coefficients for shape functions
+  !> \param[in] b_start Start coefficients for shape functions
+  !> \param[in] b_end End coefficients for shape functions
+  !> \param[in] c_start Start coefficients for shape functions
+  !> \param[in] c_end End coefficients for shape functions
+  !> \param[in] d_start Start coefficients for shape functions
+  !> \param[in] d_end End coefficients for shape functions
+  !> \param[in] el2edl Edge length values for local edges
+  !> \param[in] ed_sign Edge orientation sign matrix
+  !> \param[in] Ve Element volumes
+  !> \param[in] w Angular frequency
+  !> \param[in] mu Magnetic permeability per element
+  !> \param[out] E_rec1 Electric field vector at the receiver
+  !> \param[out] H_rec1 Magnetic field vector at the receiver
   !---------------------------------------------------------------------
   subroutine calculate_fields (u1, v1, w1, rec1_el, el2ed, S, &
                                a_start, a_end, b_start, b_end, &
@@ -40,8 +62,6 @@ contains
                                el2edl, ed_sign, Ve, w, mu, &
                                E_rec1, H_rec1)
   
-    ! INPUT
-    ! Cartesian coordinates of current receiver
     real(kind=dp), intent(in) :: u1,v1,w1 
     integer, intent(in) :: rec1_el ! current receiver element
     integer, dimension(:,:), intent(in) :: el2ed
@@ -56,20 +76,23 @@ contains
     real(kind=dp), intent(in) :: w
     real(kind=dp), dimension(:), intent(in) :: mu
 
-    ! OUTPUT
     complex(kind=dp), dimension(3), intent(out) :: E_rec1, H_rec1
     
 
     ! LOCAL variables
+    !> \brief Loop index
     integer :: l
-    ! edges of the element containing receiver
+    !> \brief Edges of the element containing receiver
     integer, dimension(6) :: rec1_ed 
+    !> \brief Gradient of Lstart
     real(kind=dp), dimension(3) :: grad_Lstart ! grad Lstart
+    !> \brief Gradient of Lend
     real(kind=dp), dimension(3) :: grad_Lend ! grad Lend
-    ! Nedelec basis functions of edges containing receiver (vector)
+    !> \brief Nedelec basis functions of edges containing receiver (vector)
     real(kind=dp), dimension(3) :: N_rec1 
+    !> \brief Factor -1/(iwmu)
     complex(kind=dp) :: factor   ! factor -1/(iwmu)
-    ! curl of Nedelec basis function for one edge
+    !> \brief Curl of Nedelec basis function for one edge
     real(kind=dp), dimension(3) :: curl_N !
     !-------------------------------------------------------------------
     
@@ -154,25 +177,41 @@ contains
    end subroutine calculate_fields
 
    !---------------------------------------------------------------------
-   !> @brief
-   !> new in elfe3D_GPR, @PR
-   !> subroutine for writing domain field components in .vtk files for
-   !> viewing in paraview
+   !> \brief Subroutine for writing domain field components to VTK files
+   !> \details Converts computed electric and magnetic field arrays into VTK
+   !> \details output for visualization with ParaView. The output file name is
+   !> \details generated from the mesh file name and the refinement step.
+   !> \param[in] M Number of mesh points to write
+   !> \param[in] refStep Refinement step index used for output file name
+   !> \param[in] MeshFileName Base VTK output file name prefix
+   !> \param[in] domain_Efields Complex electric field components at mesh points
+   !> \param[in] domain_Hfields Complex magnetic field components at mesh points
    !---------------------------------------------------------------------
    subroutine write_vtk_fields (M, refStep, MeshFileName, &
                                 domain_Efields, domain_Hfields)
    
-     ! INPUT
      integer, intent(in) :: M, refStep
      complex(kind=dp), dimension(:,:), intent(in) :: domain_Efields, &
                                                     domain_Hfields
 
 
      ! LOCAL variables
+     !> \brief Loop indices
      integer :: i, mi
-     integer :: opening, length, io
+     !> \brief File opening status
+     integer :: opening
+     !> \brief File length
+     integer :: length
+     !> \brief I/O status
+     integer :: io
+     !> \brief VTK file name
      character(len = 255) :: vtkFile
-     character(len = 50) :: StringStep, StringEnding, MeshFileName
+     !> \brief String for step
+     character(len = 50) :: StringStep
+     !> \brief String for ending
+     character(len = 50) :: StringEnding
+     !> \brief Mesh file name (local)
+     character(len = 50) :: MeshFileName
 
     !--------------------------------------------------------------------
      ! initialise length to zero

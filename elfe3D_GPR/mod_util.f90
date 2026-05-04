@@ -1,10 +1,12 @@
-!> @brief
-!> Module of elfe3d containing useful routines
-!!
+!> \file mod_util.f90
+!> \brief Module of elfe3d containing useful utility routines
+!> \details Contains I/O helpers, text processing, allocation checking, and
+!> \details string-handling support functions used throughout the application.
+!>
 !> original module in emilia inversion software (Kalscheuer 2008, 2010)
-!!
+!>
 !> written by Thomas Kalscheuer, last change: 16/11/2009
-!!
+!>
 !> Copyright (C) Thomas Kalscheuer 2010
 !>
 !>  This file is part of elfe3D.
@@ -31,6 +33,10 @@ module mod_util
 contains
 
   !-----------------------------------------------------------------
+  !> \brief Write a message to the specified unit and optionally to screen
+  !> \param[in] iu Fortran unit number where the message is written
+  !> \param[in] msg Text message to output
+  !-----------------------------------------------------------------
   subroutine Write_Message(iu, msg)
 
     ! input variables
@@ -56,6 +62,10 @@ contains
   end subroutine Write_Message
 
 
+  !-----------------------------------------------------------------
+  !> \brief Write an error message to the specified unit and terminate execution
+  !> \param[in] iu Fortran unit number where the error message is written
+  !> \param[in] error_msg Error text to output before program termination
   !-----------------------------------------------------------------
   subroutine Write_Error_Message(iu, error_msg)
 
@@ -90,6 +100,10 @@ contains
   end subroutine Write_Error_Message
 
 
+  !-----------------------------------------------------------------
+  !> \brief Validate a required input variable and report problems
+  !> \param[in] iu Fortran unit number to write validation messages
+  !> \param[in] error_msg Name or description of the invalid input variable
   !-----------------------------------------------------------------
   subroutine Check_Input(iu, error_msg)
 
@@ -127,6 +141,10 @@ contains
 
 
   !-----------------------------------------------------------------
+  !> \brief Report an unrecognized input item and ask for correction
+  !> \param[in] iu Fortran unit number to write validation messages
+  !> \param[in] error_msg Name or description of the unknown input
+  !-----------------------------------------------------------------
   subroutine Check_Unknown_Input(iu, error_msg)
 
     ! input variables
@@ -162,6 +180,11 @@ contains
   end subroutine Check_Unknown_Input
 
 
+  !-----------------------------------------------------------------
+  !> \brief Check allocation status and report failures
+  !> \param[in] iu Fortran unit used for error messages
+  !> \param[in] allo_stat Allocation return code from memory allocation
+  !> \param[in] ctext Context string describing the allocation call
   !-----------------------------------------------------------------
   subroutine allocheck(iu, allo_stat, ctext)
 
@@ -206,7 +229,8 @@ contains
 
 
   !----------------------------------------------------------------------
-  ! subroutine lower converts a string to lower case
+  !> \brief Convert a character string to lower case
+  !> \param[in,out] string Input/output string modified in place
   subroutine lower(string)
 
     ! input variables
@@ -230,7 +254,8 @@ contains
 
 
   !----------------------------------------------------------------------
-  ! subroutine upper converts a string to upper case
+  !> \brief Convert a character string to upper case
+  !> \param[in,out] string Input/output string modified in place
   subroutine upper(string)
 
 
@@ -255,7 +280,10 @@ contains
 
 
   !----------------------------------------------------------------------
-  ! function findstr is to be substituted by index(upper(string))
+  !> \brief Find a substring within a string ignoring case
+  !> \param[in] str1 Input search string
+  !> \param[in] str2 Substring to locate within str1
+  !> \return Position of the first occurrence of str2 in str1, or 0 if not found
   integer function findstr(str1,str2)
 
     ! input data
@@ -292,8 +320,10 @@ contains
 
 
   !----------------------------------------------------------------------
-  ! Returns the number of words in string (words are seperated
-  ! by spaces, tabs or commas).
+  !> \brief Count words in a string
+  !> \details Words are separated by spaces, tabs, or commas.
+  !> \param[in] string Input string to parse
+  !> \return Number of words found in the string
   integer function nword(string)
 
     ! input data
@@ -322,9 +352,11 @@ contains
 
 
   !----------------------------------------------------------------------
-  ! Returns the index of the first non-blank CHARACTER in the iwrd'th
-  ! non-blank word (word are seperated by spaces, tabs or commas).
-  ! Returns len if iwrd'th word is not found.
+  !> \brief Find first non-blank character index of the specified word
+  !> \details Words are separated by spaces, tabs, or commas.
+  !> \param[in] string Input string containing words
+  !> \param[in] iwrd Word number to locate (1-based)
+  !> \return Index of the first character of the iwrd-th word, or len(string) if not found
   integer function begwrd(string,iwrd)
 
     ! input data
@@ -360,9 +392,11 @@ contains
 
 
   !----------------------------------------------------------------------
-  ! Returns the index of the last non-blank CHARACTER in the iwrd'th
-  ! non-blank word (word are seperated by spaces, tabs or commas).
-  ! Returns len if iwrd'th word is not found.
+  !> \brief Find last non-blank character index of the specified word
+  !> \details Words are separated by spaces, tabs, or commas.
+  !> \param[in] string Input string containing words
+  !> \param[in] iwrd Word number to locate (1-based)
+  !> \return Index of the last character of the iwrd-th word, or len(string) if not found
   integer function endwrd(string,iwrd)
 
     ! input data
@@ -396,7 +430,8 @@ contains
 
 
   !----------------------------------------------------------------------
-  ! bubble sort for array with integer values (PR)
+  !> \brief Sort an integer array using bubble sort
+  !! \param[in,out] a Integer array to sort in place
   subroutine bubblesort_int(a)
     ! input/output variables
     integer, dimension(:), intent(inout) :: a
@@ -426,7 +461,8 @@ contains
 
 
 !----------------------------------------------------------------------
-  ! bubble sort for array with real values
+  !> \brief Sort a real array using bubble sort
+  !! \param[in,out] a Real array to sort in place
   subroutine bubblesort_real(a)
     ! input/output variables
     real(kind=dp), dimension(:), intent(inout) :: a

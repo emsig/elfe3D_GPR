@@ -1,7 +1,8 @@
-!> @brief
-!> Module of elfe3D containing subroutineto read in/regionparameters.txt
-!> and assign model parameters 
-!> (resistivities and magnetic permeabilities) for each element
+!> \file mod_model_parameters.f90
+!> \brief Module of elfe3D containing routines for reading and assigning model parameters
+!> \details Reads region parameter definitions from `in/regionparameters.txt` and maps
+!> \details element attribute values to per-element resistivity, relative permeability,
+!> \details and permittivity arrays used during matrix assembly.
 !!
 !> written by Paula Rulff, 27/08/2018
 !!
@@ -32,20 +33,13 @@ module model_parameters
 
 contains
   !---------------------------------------------------------------------
-  !> @brief 
-  !> subroutine for assigning model parameters to elements based on 
-  !> their element attributes
-  !> Provide the following in input file: in/regionparameters.txt
-  !> This input file must have the following 
-  !> structure (example):
-  !> # eleattr
-  !> 3
-  !> # eleattr rho mu_r epsilon_r
-  !> 1 100000000.0 1.0 0.0
-  !> 2 100 1.0 0.0
-  !> 3 10 1.0 0.0
-  !>
-  !> epsilon_r is now used!
+  !> \brief Read region model parameters and assign per-element material properties
+  !> \details Reads `in/regionparameters.txt`, validates region definitions, and maps element attributes to resistivity, permeability, and permittivity arrays.
+  !> \param[in] attr Element attribute array of length M
+  !> \param[in] M Number of elements
+  !> \param[out] rho Per-element resistivity values
+  !> \param[out] mu Per-element magnetic permeability values
+  !> \param[out] eps Per-element permittivity values
   !---------------------------------------------------------------------
 
   subroutine read_model_param (attr, M, rho, mu, eps)

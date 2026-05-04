@@ -1,6 +1,8 @@
-!> @brief
-!> Module of elfe3D containing subroutines to calculate local parts of
-!> system matrix
+!> \file mod_calculate_local_left.f90
+!> \brief Module of elfe3D containing routines to compute local element matrices
+!> \details Produces local stiffness and mass matrices for each element, including
+!> \details anisotropic PML modifications and model parameter scaling for the global assembly.
+!> \author Paula Rulff
 !!
 !> written by Paula Rulff, 28/08/2018
 !!
@@ -31,30 +33,39 @@ module calculate_local_left
 contains
 
   !---------------------------------------------------------------------
-  !> @brief
-  !> subroutine for calculating stiffness matrix Kij
-  !> modified in elfe3D_GPR, @CS: model parameter scaling included
+  !> \brief Subroutine for calculating stiffness matrix Kij (modified in elfe3D_GPR, model parameter scaling included)
   !---------------------------------------------------------------------
   subroutine calc_stiffness_matrix (l, el2edl, Ve, ed_sign, &
        b_start, b_end, c_start, c_end, d_start, d_end, &
        mu_r, K)
 
     ! INPUT
-    ! element index
+    !> \param[in] l Element index
     integer, intent(in) :: l
+    !> \param[in] el2edl Element to edge length
     real(kind=dp), dimension(:,:), intent(in) :: el2edl ! (M,6)
+    !> \param[in] Ve Element volume
     real(kind=dp), dimension(:), intent(in) :: Ve ! (M)
-    ! array of local edge signs
+    !> \param[in] ed_sign Array of local edge signs
     real(kind=dp), dimension(:,:), intent(in) :: ed_sign
+    !> \param[in] b_start Start b coefficients
+    !> \param[in] b_end End b coefficients
+    !> \param[in] c_start Start c coefficients
+    !> \param[in] c_end End c coefficients
+    !> \param[in] d_start Start d coefficients
+    !> \param[in] d_end End d coefficients
     real(kind=dp), dimension(:,:), intent(in) :: b_start, b_end, &
                                                  c_start, c_end, &
                                                  d_start, d_end ! (M,6)
+    !> \param[in] mu_r Relative magnetic permeability
     real(kind=dp), dimension(:), intent(in) :: mu_r ! (M)
 
     ! OUTPUT
+    !> \param[inout] K Stiffness matrix
     complex(kind=dp), dimension(:,:), intent(inout) :: K
 
     ! LOCAL variables
+    !> \brief Loop indices
     integer :: i,j
 
     !-------------------------------------------------------------------
@@ -83,30 +94,39 @@ contains
 
 
   !---------------------------------------------------------------------
-  !> @brief
-  !> subroutine for calculating mass matrix Mij
-  !> modified in elfe3D_GPR, @CS: model parameter scaling included
+  !> \brief Subroutine for calculating mass matrix Mij (modified in elfe3D_GPR, model parameter scaling included)
   !---------------------------------------------------------------------
   subroutine calc_mass_matrix (l, el2edl, Ve, ed_sign, &
        b, c, d, k_0, epsilon_r_eff, MM)
 
     ! INPUT
-    ! element index
+    !> \param[in] l Element index
     integer, intent(in) :: l
+    !> \param[in] el2edl Element to edge length
     real(kind=dp), dimension(:,:), intent(in) :: el2edl ! (M,6)
+    !> \param[in] ve Element volume
     real(kind=dp), dimension(:), intent(in) :: ve ! (M)
+    !> \param[in] b B coefficients
+    !> \param[in] c C coefficients
+    !> \param[in] d D coefficients
     real(kind=dp), dimension(:,:), intent(in) :: b,c,d ! (M,4)
-    ! array of local edge signs
+    !> \param[in] ed_sign Array of local edge signs
     real(kind=dp), dimension(:,:), intent(in) :: ed_sign
+    !> \param[in] k_0 Wave number
     real(kind=dp), intent(in) :: k_0
+    !> \param[in] epsilon_r_eff Effective relative permittivity
     complex(kind=dp), dimension(:), intent(in) :: epsilon_r_eff ! (M) 
 
     ! OUTPUT
+    !> \param[inout] MM Mass matrix
     complex(kind=dp), dimension(:,:), intent(inout) :: MM
 
     ! LOCAL variables
+    !> \brief Allocation status
     integer :: allo_stat
+    !> \brief Loop indices
     integer :: i,j
+    !> \brief F matrix
     complex(kind=dp), allocatable, dimension(:,:) :: f
 
     !-------------------------------------------------------------------
@@ -216,32 +236,40 @@ contains
 
   
   !---------------------------------------------------------------------
-  !> @brief
-  !> subroutine for calculating stiffness matrix Kij
-  !> new in elfe3D_GPR, @CS: PML stretching factors included,
-  !> anisotropic PML formulation
+  !> \brief Subroutine for calculating stiffness matrix Kij (new in elfe3D_GPR, PML stretching factors included, anisotropic PML formulation)
   !---------------------------------------------------------------------
   subroutine calc_stiffness_matrix_anisotropic_PML (l, el2edl, Ve, ed_sign, &
        b_start, b_end, c_start, c_end, d_start, d_end, mu_r, LAMBDA_inv_l, K)
 
     ! INPUT
-    ! element index
+    !> \param[in] l Element index
     integer, intent(in) :: l
+    !> \param[in] el2edl Element to edge length
     real(kind=dp), dimension(:,:), intent(in) :: el2edl ! (M,6)
+    !> \param[in] Ve Element volume
     real(kind=dp), dimension(:), intent(in) :: Ve ! (M)
-    ! array of local edge signs
+    !> \param[in] ed_sign Array of local edge signs
     real(kind=dp), dimension(:,:), intent(in) :: ed_sign
+    !> \param[in] b_start Start b coefficients
+    !> \param[in] b_end End b coefficients
+    !> \param[in] c_start Start c coefficients
+    !> \param[in] c_end End c coefficients
+    !> \param[in] d_start Start d coefficients
+    !> \param[in] d_end End d coefficients
     real(kind=dp), dimension(:,:), intent(in) :: b_start, b_end, &
                                                  c_start, c_end, &
                                                  d_start, d_end ! (M,6)
+    !> \param[in] mu_r Relative magnetic permeability
     real(kind=dp), dimension(:), intent(in) :: mu_r
-   ! PML stretching factors, new in v1.2.0
+   !> \param[in] LAMBDA_inv_l Inverse PML stretching factors
    complex(kind=dp), dimension(:), intent(in) :: LAMBDA_inv_l
 
     ! OUTPUT
+    !> \param[inout] K Stiffness matrix
     complex(kind=dp), dimension(:,:), intent(inout) :: K
 
     ! LOCAL variables
+    !> \brief Loop indices
     integer :: i,j
     !-------------------------------------------------------------------
 
@@ -272,33 +300,41 @@ contains
 
 
   !---------------------------------------------------------------------
-  !> @brief
-  !> subroutine for calculating mass matrix Mij
-  !> new in elfe3D_GPR, @CS: PML stretching factors included, 
-  !> anisotropic PML formulation
+  !> \brief Subroutine for calculating mass matrix Mij (new in elfe3D_GPR, PML stretching factors included, anisotropic PML formulation)
   !---------------------------------------------------------------------
   subroutine calc_mass_matrix_anisotropic_PML (l, el2edl, Ve, ed_sign, &
        b, c, d, k_0, epsilon_r_eff, LAMBDA_l, MM)
 
     ! INPUT
-    ! element index
+    !> \param[in] l Element index
     integer, intent(in) :: l
+    !> \param[in] el2edl Element to edge length
     real(kind=dp), dimension(:,:), intent(in) :: el2edl ! (M,6)
+    !> \param[in] ve Element volume
     real(kind=dp), dimension(:), intent(in) :: ve ! (M)
+    !> \param[in] b B coefficients
+    !> \param[in] c C coefficients
+    !> \param[in] d D coefficients
     real(kind=dp), dimension(:,:), intent(in) :: b,c,d ! (M,4)
-    ! array of local edge signs
+    !> \param[in] ed_sign Array of local edge signs
     real(kind=dp), dimension(:,:), intent(in) :: ed_sign
+    !> \param[in] k_0 Wave number
     real(kind=dp), intent(in) :: k_0
+    !> \param[in] epsilon_r_eff Effective relative permittivity
     complex(kind=dp), dimension(:), intent(in) :: epsilon_r_eff ! (M)
-    ! PML stretching factors, new in v1.2.0
+    !> \param[in] LAMBDA_l PML stretching factors
     complex(kind=dp), dimension(:), intent(in) :: LAMBDA_l
 
     ! OUTPUT
+    !> \param[inout] MM Mass matrix
     complex(kind=dp), dimension(:,:), intent(inout) :: MM
 
     ! LOCAL variables
+    !> \brief Allocation status
     integer :: allo_stat
+    !> \brief Loop indices
     integer :: i,j
+    !> \brief F matrix
     complex(kind=dp), allocatable, dimension(:,:) :: f
 
     !-------------------------------------------------------------------

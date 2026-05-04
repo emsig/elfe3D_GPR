@@ -1,11 +1,12 @@
-!> @brief
-!> Module of elfe3d containing subroutines
-!> to define initial model parameters (from input file)
-!> 'in/elfe3D_input.txt'
-! 
+!> \file mod_define_model.f90
+!> \brief Module of elfe3d containing routines to define initial model parameters
+!> \details Reads the main input file `in/elfe3D_input.txt`, interprets solver,
+!> \details mesh, refinement, and output settings, and exposes those settings
+!> \details to the rest of the program through public parameters.
+!> \author Paula Rulff
 !> written by Paula Rulff, 20/06/2019
 !> modified by Paula Rulff, 25/07/2024
-!!
+!>
 !> Copyright (C) Paula Rulff 2024
 !>
 !>  This file is part of elfe3D.
@@ -51,12 +52,11 @@ module define_model
 contains
 
   !---------------------------------------------------------------------
-  !> @brief'
-  !> subroutine for defining solver
-  !> Define the following in input file:
-  !> solver
-  !> 1: PARDISO (currently not available!)
-  !> 2: MUMPS
+  !> \brief Subroutine for defining the solver type from the input file
+  !> \details Reads the solver selection from `in/elfe3D_input.txt` and sets the
+  !> \details solver mode used by the application.
+  !> \param[out] solver Selected solver mode (1 = PARDISO, 2 = MUMPS)
+  !> \note Input file must contain `solver` with 1 or 2.
   !---------------------------------------------------------------------
   subroutine define_solver (solver)
   
@@ -97,45 +97,20 @@ contains
   end subroutine define_solver
 
   !---------------------------------------------------------------------
-  !> @brief
-  !> subroutine for defining refinement parameters
-  !> Define the following in input file:
-  !> maxRefSteps, maxUnknowns, betaRef, accuracyTol, vtk , 
-  !> errorEst_method , refStrategy             0
-  !>
-  !> Maximum number of refinement steps:
-  !> maxRefSteps = 0 means no refinement
-  !> run several frequencies only without refinement
-  !> Maximum number of unknowns:
-  !> maxUnknowns  
-  !> threshold for number of elements to be refined:
-  !> betaRef
-  !> (e.g. 0.9 = those with 90% highest error estimator)
-  !> desired accuracy tolerance < 1:
-  !> accuracyTol
-  !> write .vtk files for paraview with error estimates (yes/no) = (1/0)
-  !> vtk
-  !> Method for error estimation:
-  !> errorEst_method
-  !> residuals (1)
-  !> residuals and face jumps J (2)
-  !> residuals and face jumps J and H (3)
-  !> face jumps J (4)
-  !> face jumps H (5)
-  !> face jumps J & H  (6)
-  !> Refinement strategy:
-  !> refStrategy
-  !> constant quality factor (0)
-  !> maxRefSteps-1 on low quality mesh, last step high quality mesh (1)
-  !> increasing quality factor (2)
-  !> increasing quality factor on mesh with detailled subsurface anomaly
-  !> (-T and -d  option added) (3)
+  !> \brief Read refinement parameters from the main input file
+  !> \details Parses `maxRefSteps`, `maxUnknowns`, `betaRef`, `accuracyTol`, `vtk`, `errorEst_method`, and `refStrategy`
+  !> \param[out] maxRefSteps Maximum number of refinement steps (0 disables refinement)
+  !> \param[out] maxUnknowns Maximum number of unknowns allowed during refinement
+  !> \param[out] accuracyTol Desired accuracy tolerance for refinement
+  !> \param[out] betaRef Refinement threshold fraction for selecting elements
+  !> \param[out] vtk Flag to write VTK output for error estimates (1 = yes, 0 = no)
+  !> \param[out] errorEst_method Error estimation method selector
+  !> \param[out] refStrategy Mesh refinement strategy selector
   !---------------------------------------------------------------------
   subroutine define_refinement (maxRefSteps, maxUnknowns, accuracyTol, &
                                 betaRef, vtk, errorEst_method, &
                                 refStrategy)
   
-    ! OUTPUT
     integer, intent(out) :: maxRefSteps, maxUnknowns, vtk, &
                             errorEst_method, refStrategy
     real(kind=dp), intent(out) :: accuracyTol, betaRef 
@@ -231,17 +206,19 @@ contains
   end subroutine define_refinement
 
   !---------------------------------------------------------------------
-  !> @brief
-  !> subroutine for defining mesh
-  !> Define the following in input file: model_file_name
+  !> \brief Determine mesh file names for the current refinement step
+  !> \details Reads `model_file_name` from the input file and constructs the corresponding TetGen mesh file names for the current refinement step.
+  !> \param[in] refStep Current refinement step index
+  !> \param[out] NodeFile Output .node file name for the current refinement step
+  !> \param[out] EdgeFile Output .edge file name for the current refinement step
+  !> \param[out] ElementFile Output .ele file name for the current refinement step
+  !> \param[out] NeighFile Output .neigh file name for the current refinement step
+  !> \param[out] StringName Base model file name read from the input file
   !---------------------------------------------------------------------
   subroutine define_mesh (NodeFile, EdgeFile, ElementFile, NeighFile, &
                          refStep, StringName)
   
-    ! INPUT
-    ! current refinement step
     integer, intent(in) :: refStep
-    ! OUTPUT
     character(len = 255), intent(out) :: NodeFile, EdgeFile, &
                                          ElementFile, NeighFile
     character(len = 50), intent(out) :: StringName
@@ -315,73 +292,19 @@ contains
   end subroutine define_mesh
 
   !---------------------------------------------------------------------
-  !> @brief
-  !> subroutine for defining size of the source
-  !>
-  !> Define the following in input file:
-  !> source_type
-  !> source start coordinates
-  !> source end coordinates
-  !> current_direction
-  !> source_moment
-  !>
-  !> Options for source_type:
-  !> HED_x (0), HED_y (1), loop_source (2), arbitrary HED_x (3), 
-  !> arbitrary HED_y (4), straight_source_segment in any direction (5)
-  !> segmented_line_source (6), segmented_loop_source (7)
-  !> PR comment:  only 6 or 7 would be sufficient
-
-  !> HED_x (0), HED_y (1) are straight HEDs in exactly either x- or 
-  !> y- direction
-  !> loop_source (2) is a squared loop source defined by northern
-  !> line-source and midpoint, segments exactly on x- and y- direction
-  !> if you choose arbitrary HED, you have to use node-boundary 
-  !> markers = 3 for all source nodes in your .poly-inputfile
-  !> this will be the fastest option, but it does probably not work 
-  !> for refinement!
-  !> straight_source_segment in any direction (5) every edge between 
-  !> source start and source endpoint will be a source edge
-  !> line/loop source split into straight source segments - provide 
-  !> input file with coordinates of segment nodes! (6/7)
-  !> Loop source coordinates always in clockwise direction!
-
-
-  !> Define coordinates of the horizontal source:
-  !> if z negative downwards:
-  !> x positive to E
-  !> y positive to N
-  !> z positive upwards
-  !> in case of a horizontal loop source, define north line-source 
-  !> start & endpoints
-
-  !> if z positive downwards:
-  !> x positive to N
-  !> y positive to E
-  !> z positive downwards
-  !> in case of a horizontal loop source, define east line-source 
-  !> start & endpoint
-
-  !> Start (starting-point/smaller x,y,z-coordinate) of
-  !> electric dipole source
-  !> End (end-point/larger x,y,z-coordinate) of electric dipole source
-
-
-  !> Define direction:
-  !> if z negative downwards:
-  !> for CSTYPE = HED:
-  !> current in positive direction: direction = 0
-  !> current in negative direction: direction = 1
-  !> for CSTYPE = loop_source:
-  !> clockwise current: direction  = 0
-  !> anticlockwise current: direction = 1
-
-  !> if z positive downwards:
-  !> for CSTYPE = HED:
-  !> current in positive direction: direction = 1
-  !> current in negative direction: direction = 0
-  !> for CSTYPE = loop_source:
-  !> clockwise current: direction  = 1
-  !> anticlocwise current: direction = 0
+  !> \brief Read source geometry and type from the input file
+  !> \details Parses `in/elfe3D_input.txt` to define dipole and loop source parameters used by the solver.
+  !> \param[out] sx_start x-coordinate of the source start point
+  !> \param[out] sy_start y-coordinate of the source start point
+  !> \param[out] sz_start z-coordinate of the source start point
+  !> \param[out] sx_end x-coordinate of the source end point
+  !> \param[out] sy_end y-coordinate of the source end point
+  !> \param[out] sz_end z-coordinate of the source end point
+  !> \param[out] CSTYPE Source type code (0 = HED_x, 1 = HED_y, 2 = loop_source, 3 = arbitrary_HED_x, 4 = arbitrary_HED_y, 5 = straight_source_segment, 6 = segmented_line_source, 7 = segmented_loop_source)
+  !> \param[out] direction Current or loop direction index
+  !> \param[out] p Source moment magnitude
+  !> \param[out] midp_source Midpoint coordinates of the source
+  !> \note The input file must provide `source_type`, `current_direction`, and source geometry coordinates.
   !---------------------------------------------------------------------
   subroutine define_source (sx_start, sy_start, sz_start, sx_end, &
                             sy_end, sz_end, CSTYPE, direction, p, &
@@ -466,23 +389,13 @@ contains
 
 
   !---------------------------------------------------------------------
-  !> @brief
-  !> subroutine for defining existence and size of a PEC
-  !> to model metallic borehole casing
-  !> Define the following in input file:
-  !> no PEC present: 
-  !> PEC_present = 0
-  !> PEC present: 
-  !> PEC_present = 1
-  !> define number of PEC:
-  !> num_PEC
-  !> followed by coordinates of start points
-  !> PEC1 start x,y,z
-  !> PEC2 start x,y,z
-  !> PEC.. start x,y,z
-  !> PEC1 end x,y,z
-  !> PEC2 end x,y,z
-  !> PEC.. end x,y,z
+  !> \brief Read perfect electric conductor settings from the input file
+  !> \details Parses `in/elfe3D_input.txt` to determine whether PEC objects are present and to allocate coordinates for their start/end points.
+  !> \param[out] PEC Flag indicating PEC presence (0 = none, 1 = defined)
+  !> \param[out] num_PEC Number of PEC objects
+  !> \param[out] PEC_start Start coordinates of each PEC object
+  !> \param[out] PEC_end End coordinates of each PEC object
+  !> \note When `PEC_present = 1`, the input file must include `num_PEC` and coordinate lists for each object.
   !---------------------------------------------------------------------
   subroutine define_PEC (PEC, num_PEC, PEC_start, PEC_end)
 
@@ -562,12 +475,12 @@ contains
 
 
   !---------------------------------------------------------------------
-  !> @brief
-  !> subroutine for defining output files
-  !> Define the following in input file: 
-  !> num_rec
-  !> output_E_file, output_E_file
-  !> output_fields_vtk (from version 1.1.0)
+  !> \brief Read output configuration from the input file
+  !> \details Reads output filenames and receiver counts, and optionally enables VTK field output.
+  !> \param[out] EFile Output filename for electric field data
+  !> \param[out] HFile Output filename for magnetic field data
+  !> \param[out] num_rec Number of receiver locations
+  !> \param[out] fields_vtk Flag to enable VTK field output (0 = disabled, 1 = enabled)
   !---------------------------------------------------------------------
   subroutine define_output (EFile, HFile, num_rec, fields_vtk)
   
@@ -641,11 +554,10 @@ contains
   end subroutine define_output
 
   !---------------------------------------------------------------------
-  !> @brief
-  !> subroutine for defining frequencies
-  !> Define the following in input file: 
-  !> num_freq                1
-  !> followed by a list of frequencies
+  !> \brief Read frequency list from the input file
+  !> \details Reads `num_freq` and the corresponding frequency values from `in/elfe3D_input.txt`.
+  !> \param[out] Nfreq Number of frequencies defined in the input file
+  !> \param[out] freq Array of frequency values
   !---------------------------------------------------------------------
 
   subroutine define_freq (Nfreq, freq)
@@ -700,11 +612,14 @@ contains
   end subroutine define_freq
 
   !---------------------------------------------------------------------
-  !> @brief
-  !> subroutine for defining model_size
-  !> Define the following in input file below keyword model_size
-  !> minimum x,y,z
-  !> maximum x,y,z
+  !> \brief Read the model domain boundaries from the input file
+  !> \details Reads the `model_size` block in `in/elfe3D_input.txt` and sets the minimum and maximum domain coordinates.
+  !> \param[out] x_min Minimum x-coordinate of the model domain
+  !> \param[out] x_max Maximum x-coordinate of the model domain
+  !> \param[out] y_min Minimum y-coordinate of the model domain
+  !> \param[out] y_max Maximum y-coordinate of the model domain
+  !> \param[out] z_min Minimum z-coordinate of the model domain
+  !> \param[out] z_max Maximum z-coordinate of the model domain
   !---------------------------------------------------------------------
   subroutine define_model_size (x_min, x_max, &
                                 y_min, y_max, &
@@ -745,11 +660,19 @@ contains
   end subroutine define_model_size
 
   !---------------------------------------------------------------------
-  !> @brief
-  !> subroutine for defining receiver locations
-  !> Define the following in input file: 
-  !> num_rec
-  !> followed by a list of receiver coordinates x,y,z
+  !> \brief Read receiver locations from the input file
+  !> \details Parses the number of receivers and their coordinates from `in/elfe3D_input.txt`.
+  !> \param[in] M Number of elements in the mesh
+  !> \param[out] num_rec Number of receiver locations
+  !> \param[in] a Element geometry matrix a
+  !> \param[in] b Element geometry matrix b
+  !> \param[in] c Element geometry matrix c
+  !> \param[in] d Element geometry matrix d
+  !> \param[in] Ve Element volumes
+  !> \param[out] u1 x-coordinate array for receivers
+  !> \param[out] v1 y-coordinate array for receivers
+  !> \param[out] w1 z-coordinate array for receivers
+  !> \param[out] rec1_el Element index for each receiver location
   !---------------------------------------------------------------------
   subroutine define_rec (M, num_rec, a, b, c, d, Ve, u1, v1, w1, &
                          rec1_el)
@@ -862,13 +785,11 @@ contains
   end subroutine define_rec
 
   !---------------------------------------------------------------------
-  !> @brief
-  !> new in elfe3D_GPR, @CS
-  !> Subroutine for defining PML
-  !> Define the following in input file:
-  !> PML_present
-  !> PML_thickness
-  !> PML_decay_type
+  !> \brief Read PML configuration from the input file
+  !> \note New in elfe3D_GPR
+  !> \param[out] PML_present Flag indicating whether PML is enabled
+  !> \param[out] PML_thickness Thickness of the PML layer
+  !> \param[out] PML_decay_type Decay function code for the PML
   !---------------------------------------------------------------------
   subroutine define_PML(PML_present, PML_thickness, PML_decay_type)
 

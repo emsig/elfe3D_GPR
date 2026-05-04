@@ -1,10 +1,12 @@
-!> @brief
-!> Module of elfe3d containing functions to calculate vector products
-!!
+!> \file mod_vector_products.f90
+!> \brief Module of elfe3d containing vector product helper functions
+!> \details Implements real and complex cross product operations used by geometry
+!> \details and field interpolation routines.
+!>
 !> written by Paula Rulff, 29/01/2020
-!!
+!>
 !> Last change: March 2024
-!!
+!>
 !> Copyright (C) Paula Rulff 2020
 !!
 !> original functions (for real vectors) can be found at
@@ -34,9 +36,11 @@ module vector_products
   contains
 
   !---------------------------------------------------------------------
-  !> @brief
-  !> function for calculating cross product of two real vectors [3]
-  ! A x B = (a2b3  -   a3b2,     a3b1   -   a1b3,     a1b2   -   a2b1) 
+  !> \brief Compute the cross product of two real 3-component vectors
+  !> \details Computes the standard 3D cross product using real-valued input vectors.
+  !> \param[in] a First real vector operand of length 3
+  !> \param[in] b Second real vector operand of length 3
+  !> \return Real cross product vector of length 3
   !---------------------------------------------------------------------
     function cross_product_real(a, b)
       real(kind=dp), dimension(3) :: cross_product_real
@@ -49,9 +53,11 @@ module vector_products
 
 
   !---------------------------------------------------------------------
-  !> @brief
-  !> function for calculating cross product of two complex vectors [3]
-  ! A x B = (a2b3  -   a3b2,     a3b1   -   a1b3,     a1b2   -   a2b1) 
+  !> \brief Compute the cross product of two complex 3-component vectors
+  !> \details Computes the standard 3D cross product using complex-valued input vectors.
+  !> \param[in] a First complex vector operand of length 3
+  !> \param[in] b Second complex vector operand of length 3
+  !> \return Complex cross product vector of length 3
   !---------------------------------------------------------------------
     function cross_product(a, b)
       complex(kind=dp), dimension(3) :: cross_product

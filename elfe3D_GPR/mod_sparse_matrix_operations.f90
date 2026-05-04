@@ -1,6 +1,7 @@
-!> @brief
-!> Module of elfe3d containing subroutines mostly adapted from
-!> SPARSEKIT package (Saad, 2004)
+!> \file mod_sparse_matrix_operations.f90
+!> \brief Module of elfe3d containing sparse matrix conversion and manipulation routines
+!> \details Adapts SPARSEKIT sparse matrix utilities for complex-valued CSR matrix formats
+!> \details used by the finite-element assembly and solver modules.
 !!
 !> written by Paula Rulff, 12/2018
 !!
@@ -31,10 +32,16 @@ module sparse_matrix_operations
 contains
 
   !---------------------------------------------------------------------
-  !> @brief
-  ! getu extracts the upper triangular matrix.
-  ! Changed to compgetu to work with complex matrices by 
-  ! Paula Rulff, Jan 2019.
+  !> \brief Extract the upper triangular part of a CSR matrix for complex values
+  !> \details This routine converts a complex CSR matrix into its upper triangular representation in CSR form. It can operate in place when the output arrays alias the input arrays.
+  !> \param[in] n Matrix dimension
+  !> \param[in] NNZ Number of nonzero entries in the matrix
+  !> \param[in] a CSR value array of the input matrix
+  !> \param[in] ja CSR column index array of the input matrix
+  !> \param[in] ia CSR row pointer array of the input matrix
+  !> \param[in,out] ao CSR value array to receive the upper triangular matrix
+  !> \param[in,out] jao CSR column index array for the output matrix
+  !> \param[in,out] iao CSR row pointer array for the output matrix
   !---------------------------------------------------------------------
   subroutine compgetu ( n, NNZ, a, ja, ia, ao, jao, iao )
     !
@@ -147,10 +154,14 @@ contains
   end subroutine compgetu
 
   !----------------------------------------------------------------------
-  !> @brief
-  !> coicsr converts coordinate format to CSR format (SPARSEKIT).
-  !> Changed to compcoicsr to work with complex matrices by Paula Rulff
-  !> July 2019.
+  !> \brief Convert a matrix from coordinate (COO) format to CSR format for complex matrices
+  !> \details The conversion is performed in place and supports optional preservation of matrix values depending on the job flag.
+  !> \param[in] n Matrix row dimension
+  !> \param[in] nnz Number of nonzero entries
+  !> \param[in] job Job mode selector (1 = copy values, otherwise structure only)
+  !> \param[in,out] a Complex value array in coordinate format overwritten by CSR values
+  !> \param[in,out] ja Column indices array overwritten by CSR indices
+  !> \param[in,out] ia Row pointer array overwritten by CSR row pointers
   !----------------------------------------------------------------------
   subroutine compcoicsr (n,nnz,job,a,ja,ia)
     
@@ -283,9 +294,13 @@ contains
   
 
   !---------------------------------------------------------------------
-  !> @brief
-  !> csort routine from SPARSEKIT
-  !> modified to work with complex matrices by Paula Rulff, 2020
+  !> \brief Sort CSR matrix column indices within each row
+  !> \details This routine sorts the entries of a CSR sparse matrix in increasing column order within each row. When `values` is true, the complex value array is permuted as well.
+  !> \param[in] n Row dimension of the matrix
+  !> \param[in] values Logical flag indicating whether matrix values should also be permuted
+  !> \param[in,out] a Complex value array in CSR format
+  !> \param[in,out] ja Column index array in CSR format
+  !> \param[in,out] ia Row pointer array in CSR format
   !---------------------------------------------------------------------
   subroutine csort (n, values, a, ja, ia) 
 
@@ -352,18 +367,14 @@ contains
   end subroutine csort
 
   !---------------------------------------------------------------------
-  !> @brief
-  !> csumdup taken from stackoverflow example
-  !> modified to work with complex matrices by Paula Rulff, 2020
+  !> \brief Sum duplicate entries in a CSR matrix row-wise
+  !> \details Combines adjacent duplicate column entries in each row of a sorted CSR matrix, preserving explicit zero values.
+  !> \param[in,out] Ap CSR row pointer array modified in place
+  !> \param[in,out] Aj CSR column index array modified in place
+  !> \param[in,out] Ax CSR value array modified in place
   !---------------------------------------------------------------------
 
   subroutine csumdup (Aj, Ap, Ax)
-
-  ! Sum together duplicate column entries in each row of CSR matrix A
-  ! The column indicies within each row must be in sorted order.
-  ! Explicit zeros are retained.
-  ! Ap, Aj, and Ax will be modified *inplace*
-  !---------------------------------------------------------------------
 
   ! INPUT/Output
   integer, intent(inout) :: Ap(:), Aj(:)
@@ -404,11 +415,20 @@ contains
   end subroutine csumdup
 
   !---------------------------------------------------------------------
-  !> @brief
-  !> csrcoo from SPARSEKIT multiplies a CSR matrix A times a vector
-  !> Changed to compcsrcoo to work with complex matrices by Paula Rulff,
-  !> June 2022.
-  !----------------------------------------------------------------------
+  !> \brief Convert a CSR matrix to coordinate (COO) format for complex matrices
+  !> \details Outputs the matrix in COO arrays optionally with values, column indices, and row indices depending on the job parameter.
+  !> \param[in] nrow Number of matrix rows
+  !> \param[in] job Job selector (1 = ir only, 2 = ir and jc only, 3 = full conversion)
+  !> \param[in] nzmax Maximum allowed nonzero count for output arrays
+  !> \param[in,out] a Input CSR values overwritten when conversion is done in place
+  !> \param[in,out] ja Input CSR column indices overwritten when conversion is done in place
+  !> \param[in,out] ia Input CSR row pointers overwritten when conversion is done in place
+  !> \param[out] ao Output COO value array
+  !> \param[out] ir Output COO row index array
+  !> \param[out] jc Output COO column index array
+  !> \param[out] nnz Number of nonzero entries produced
+  !> \param[out] ierr Error indicator (0 = success, 1 = insufficient output space)
+  !---------------------------------------------------------------------
   subroutine compcsrcoo (nrow,job,nzmax,a,ja,ia,nnz,ao,ir,jc,ierr)
     
     ! INPUT

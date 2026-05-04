@@ -1,6 +1,7 @@
-!> @brief
-!> Module of elfe3d for mesh-related operations 
-!> involving the mesh generator tetgen
+!> \file mod_tetgen_operations.f90
+!> \brief Module of elfe3d for mesh operations involving TetGen
+!> \details Provides routines for adaptive mesh refinement, volume constraint generation,
+!> \details and external TetGen invocation to regenerate the mesh during the refinement cycle.
 !!
 !> written by Laura Maria Buntin & Paula Rulff, 19/11/2019
 !!
@@ -29,9 +30,14 @@ module tetgen_operations
 
 contains
    !--------------------------------------------------------------------
-   !> @brief
-   !> subroutine for calculating volume constraints for
-   !> new mesh generation
+   !> \brief Calculate volume constraints for mesh refinement
+   !> \param[in] M Number of elements in the mesh
+   !> \param[in] refStep Current refinement step index
+   !> \param[in] Ve Element volume array
+   !> \param[in] betaRef Refinement threshold multiplier
+   !> \param[in] errorEst Element error estimator array
+   !> \param[in] StringName Base mesh file name used to derive the volume file name
+   !> \param[in,out] NewVolumeFile Output volume constraint file name
    !--------------------------------------------------------------------
    subroutine calculate_elemental_volume_constraints (M, refStep, Ve, &
                                                       betaRef, &
@@ -144,8 +150,12 @@ contains
     end subroutine calculate_elemental_volume_constraints
 
    !--------------------------------------------------------------------
-   !> @brief
-   !> subroutine for generating a new refined mesh, by invoking tetgen
+   !> \brief Generate a new refined mesh by invoking TetGen
+   !> \param[in] NodeFile Base node file name for the current mesh
+   !> \param[in] ElementFile Base element file name for the current mesh
+   !> \param[in] refStep Current refinement step index
+   !> \param[in] refStrategy Refinement strategy selector
+   !> \param[in] maxRefSteps Maximum number of refinement steps configured
    !--------------------------------------------------------------------
    subroutine generate_new_mesh (NodeFile, ElementFile, refStep, &
                                  refStrategy, maxRefSteps)

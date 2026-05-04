@@ -1,13 +1,16 @@
-!> @brief
-!> Module of elfe3d containing subroutines for boundary
-!>  conditions-related calculations
-!!
+!> \file mod_BC.f90
+!> \brief Module of elfe3D containing boundary condition routines
+!> \details Implements Dirichlet boundary condition handling, perfect electric
+!> \details conductor (PEC) boundary support, and anisotropic perfectly matched
+!> \details layer (PML) complex stretching functions used in the finite-element system.
+!> \author Paula Rulff and Chaitanya Dinesh Singh
+!>
 !>  written by Paula Rulff and Chaitanya Dinesh Singh, 24/06/2019
-!!
-!> So far only of Dirichlet-type boundary condition is implemented.
+!>
+!> So far only Dirichlet-type boundary condition is implemented.
 !> Also includes perfect electric conductor options, and 
 !> the PML complex stretching functions.
-!!
+!>
 !>  Copyright (C) Paula Rulff and Chaitanya Dinesh Singh
 !>
 !>  This file is part of elfe3D_GPR
@@ -35,8 +38,19 @@ module BC
 contains
 
   !---------------------------------------------------------------------
-  !> @brief
-  !> subroutine for detecting surface edges
+  !> \brief Determine surface edges in the mesh
+  !> \details Scans element neighbors and edge coordinates to identify boundary edges on the mesh surface.
+  !> \param[in] M Number of elements in the mesh
+  !> \param[in] el2ed Element-to-edge connectivity array
+  !> \param[in] el2neigh Element-to-neighbor connectivity array
+  !> \param[in] x_start Edge start x-coordinates
+  !> \param[in] x_end Edge end x-coordinates
+  !> \param[in] y_start Edge start y-coordinates
+  !> \param[in] y_end Edge end y-coordinates
+  !> \param[in] z_start Edge start z-coordinates
+  !> \param[in] z_end Edge end z-coordinates
+  !> \param[out] s_edges Indices of detected surface edges
+  !> \param[out] num_s_edges Number of surface edges found
   !---------------------------------------------------------------------
   subroutine detect_surface_edges (M, el2ed, el2neigh, &
                                        x_start, x_end, &
@@ -182,9 +196,15 @@ contains
 
 
   !---------------------------------------------------------------------
-  !> @brief
-  !> subroutine for applying Dirichlet boundary condition - fast.
-  !> new in elfe3D_GPR, @CS
+  !---------------------------------------------------------------------
+  !> \brief Apply Dirichlet boundary conditions to the system matrix in a fast COO-based pass
+  !> \note New in elfe3D_GPR
+  !> \param[in] num_s_edges Number of boundary edges to apply Dirichlet conditions to
+  !> \param[in] s_edges Array of boundary edge indices
+  !> \param[in,out] NNZ Number of nonzero entries in the COO system matrix, updated after removing constrained entries
+  !> \param[in,out] Agcoo COO value array modified to enforce boundary conditions
+  !> \param[in,out] Agcol COO column index array modified to remove constrained entries
+  !> \param[in,out] Agrow COO row index array modified to remove constrained entries
   !---------------------------------------------------------------------
   subroutine apply_DBC_fast(num_s_edges, s_edges, NNZ, Agcoo, Agcol, Agrow)
 
@@ -291,8 +311,13 @@ contains
 
 
   !---------------------------------------------------------------------
-  !> @brief
-  !> subroutine for applying Dirichlet boundary condition
+  !> \brief Apply Dirichlet boundary conditions by modifying the COO system matrix
+  !> \param[in] num_s_edges Number of boundary edges to impose Dirichlet conditions on
+  !> \param[in] s_edges Array of boundary edge indices
+  !> \param[in,out] NNZ Number of nonzero entries in the COO system matrix, updated after removing redundant entries
+  !> \param[in,out] Agcoo COO value array modified to enforce Dirichlet conditions
+  !> \param[in,out] Agcol COO column index array modified to remove constrained entries
+  !> \param[in,out] Agrow COO row index array modified to remove constrained entries
   !---------------------------------------------------------------------
   subroutine apply_BC(num_s_edges, s_edges, NNZ, Agcoo, Agcol, Agrow)
 
@@ -391,9 +416,20 @@ contains
   
 
   !---------------------------------------------------------------------
-  !> @brief
-  !> subroutine for detecting perfect electric conductor (PEC) edges
-  !> so far only exactly vertical boreholes, z negative downwards
+  !> \brief Detect perfect electric conductor (PEC) edges based on input borehole coordinates
+  !> \details Currently supports vertical boreholes with z negative downwards.
+  !> \param[in] E Number of edges in the mesh
+  !> \param[in] nd Node coordinate array
+  !> \param[in] ed2nd Edge node connectivity array
+  !> \param[in] num_PEC Number of PEC edge definitions
+  !> \param[in] x_start Array of PEC start x-coordinates
+  !> \param[in] y_start Array of PEC start y-coordinates
+  !> \param[in] z_start Array of PEC start z-coordinates
+  !> \param[in] x_end Array of PEC end x-coordinates
+  !> \param[in] y_end Array of PEC end y-coordinates
+  !> \param[in] z_end Array of PEC end z-coordinates
+  !> \param[out] PEC_edges Detected PEC edge indices
+  !> \param[out] num_PEC_edges Number of detected PEC edges
   !--------------------------------------------------------------------
   subroutine detect_PEC_edges (E, nd, ed2nd, num_PEC, &
                                x_start, y_start, z_start, &
@@ -466,8 +502,13 @@ contains
 
 
   !---------------------------------------------------------------------
-  !> @brief
-  !> subroutine for applying PEC boundary conditions (E = 0 on PEC edges)
+  !> \brief Apply PEC boundary conditions by constraining PEC edges in the COO system matrix
+  !> \param[in] num_PEC_edges Number of PEC edges to constrain
+  !> \param[in] PEC_edges Array of PEC edge indices
+  !> \param[in,out] NNZ Number of nonzero entries in the COO system matrix, updated after removing constrained entries
+  !> \param[in,out] Agcoo COO value array modified to enforce PEC boundary conditions
+  !> \param[in,out] Agcol COO column index array modified to remove constrained entries
+  !> \param[in,out] Agrow COO row index array modified to remove constrained entries
   !---------------------------------------------------------------------
   subroutine apply_PEC_BC(num_PEC_edges, PEC_edges, NNZ, &
                           Agcoo, Agcol, Agrow)
@@ -570,9 +611,17 @@ contains
   end subroutine apply_PEC_BC
 
   !---------------------------------------------------------------------
-  !> @brief
-  !> new in elfe3D_GPR, @CS:
-  !> subroutine for detecting PML elements and where they are located
+  !> \brief Detect elements located in the perfectly matched layer (PML) region
+  !> \note New in elfe3D_GPR
+  !> \param[in] M Number of elements in the mesh
+  !> \param[in] nd Node coordinate array
+  !> \param[in] el2nd Element-to-node connectivity array
+  !> \param[in] PML_thickness Thickness of the PML region
+  !> \param[out] num_PML_elements Number of elements classified as PML elements
+  !> \param[out] PML_elements Array of PML element indices
+  !> \param[out] PML_type Array indicating PML side classification for each PML element
+  !> \param[out] num_non_PML_elements Number of elements outside the PML region
+  !> \param[out] non_PML_elements Array of non-PML element indices
   !----------------------------------------------------------------------
   subroutine detect_PML_element_type(M, nd, el2nd, PML_thickness, num_PML_elements, &
     PML_elements, PML_type, num_non_PML_elements, non_PML_elements)
@@ -742,8 +791,8 @@ contains
 
 
   !-----------------------------------------------------------------------------
-  !> @brief
-  !> new in elfe3D_GPR, @CS
+  !> \brief
+  !> \note New in elfe3D_GPR
   !> subroutine for evaluating the Exact PML stretching functions based on the 
   !> anisotropic formulation of the PML.
   !> Simple decay used.
@@ -834,8 +883,8 @@ contains
 
 
   !-----------------------------------------------------------------------------
-  !> @brief
-  !> new in elfe3D_GPR, @CS
+  !> \brief
+  !> \note New in elfe3D_GPR
   !> subroutine for evaluating the Exact PML stretching functions based on the 
   !> anisotropic formulation of the PML.
   !> Logarithmic decay used.
@@ -927,8 +976,8 @@ contains
 
 
   !-----------------------------------------------------------------------------
-  !> @brief
-  !> new in elfe3D_GPR, @CS
+  !> \brief
+  !> \note New in elfe3D_GPR
   !> subroutine for evaluating the Exact PML stretching functions based on the 
   !> anisotropic formulation of the PML.
   !> Exponential decay used.
@@ -1019,8 +1068,8 @@ contains
 
 
   !-----------------------------------------------------------------------------
-  !> @brief
-  !> new in elfe3D_GPR, @CS
+  !> \brief
+  !> \note New in elfe3D_GPR
   !> subroutine for evaluating the Exact PML stretching functions based on the 
   !> anisotropic formulation of the PML.
   !> Polynomial decay used.

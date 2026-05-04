@@ -1,9 +1,11 @@
-!> @brief
-!> Module of elfe3D containing subroutines to call solvers 
-!> currently, only MUMPS
-!!
+!> \file mod_solvers.f90
+!> \brief Module of elfe3D containing solver interface routines
+!> \details Wraps direct solver invocation and matrix factorization routines for
+!> \details the MUMPS solver, with placeholder hooks for optional PARDISO support.
+!> \author Paula Rulff
+!>
 !> last change by Paula Rulff, 23/07/2024
-!!
+!>
 !> Copyright (C) Paula Rulff 2024
 !>
 !>  This file is part of elfe3D.
@@ -30,10 +32,14 @@ module solvers
 
 contains
 !---------------------------------------------------------------------
-!> @brief'
-!> subroutine Pardiso_solving performs PARDISO operations including
-!> matrix check and solving the system of equations
-!> does nothing, solver currently not available
+!> \brief Placeholder PARDISO solver interface routine
+!> \details This routine defines the PARDISO interface and verifies matrix inputs but currently reports that PARDISO is unavailable.
+!> \param[in] n Dimension of the square system matrix
+!> \param[in] a Compressed sparse matrix value array in CSR format
+!> \param[in] ja Compressed sparse matrix column index array
+!> \param[in] ia Compressed sparse matrix row pointer array
+!> \param[in] b Right-hand side vector or matrix
+!> \param[in,out] x Solution vector or matrix updated by the solver
 !---------------------------------------------------------------------
 subroutine PARDISO_solving(n, a, ja, ia, b, x)
 
@@ -247,7 +253,7 @@ subroutine PARDISO_solving(n, a, ja, ia, b, x)
 
 
   !---------------------------------------------------------------------
-  !> @brief
+  !> \brief
   !> subroutine MUMPS_solving solves the system of equations
   !---------------------------------------------------------------------
   subroutine MUMPS_solving(VAL_CSR, J_CSR, I_CSR, RHSin, &
@@ -400,7 +406,7 @@ subroutine PARDISO_solving(n, a, ja, ia, b, x)
   end subroutine MUMPS_solving
 
   !---------------------------------------------------------------------
-  !> @brief
+  !> \brief
   !> subroutine MUMPS_solving_multiple_RHS solves the system of equations
   !> for multiple RHS
   !---------------------------------------------------------------------

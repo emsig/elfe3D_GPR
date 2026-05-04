@@ -1,5 +1,8 @@
-!> @brief
-!> Module of elfe3d containing subroutines for error estimation
+!> \file mod_error_estimates.f90
+!> \brief Module of elfe3d containing subroutines for error estimation
+!> \details Contains routines that compute residuals, face jumps, and local
+!> \details error estimators used for adaptive mesh refinement and solution quality assessment.
+!> \author Paula Rulff & Laura Maria Buntin
 !!
 !> written by Paula Rulff & Laura Maria Buntin, 25/10/2019
 !!
@@ -31,9 +34,29 @@ module error_estimates
 contains
 
   !---------------------------------------------------------------------
-  !> @brief
-  !> subroutine for calculating elemental residuals res_s, res_w
-  !> new in elfe3D_GPR, @CS: Adapting this for the new PDE
+  !> \brief Calculate elemental residuals for primal and dual problems
+  !> \details Computes the primal residual `res_s` and dual residual `res_w` for each non-PML element.
+  !> \param[in] num_non_PML_elements Number of elements outside the PML region
+  !> \param[in] non_PML_elements Indices of elements outside the PML region
+  !> \param[in] k_0 Free-space angular wave number
+  !> \param[in] el2ed Element-to-edge connectivity mapping
+  !> \param[in] S Solution vector for the primal field
+  !> \param[in] Wg Solution vector for the dual field
+  !> \param[in] Cg Right-hand side vector for the dual problem
+  !> \param[in] Bg Right-hand side vector for the primal problem
+  !> \param[in] epsilon_r_eff Effective permittivity per element
+  !> \param[in] Ve Element volumes
+  !> \param[in] el2edl Edge lengths for each element-edge pair
+  !> \param[in] ed_sign Local edge orientation signs
+  !> \param[in] a_start, a_end Interpolation coefficients for edge start and end values
+  !> \param[in] b_start, b_end Interpolation coefficients for edge start and end values
+  !> \param[in] c_start, c_end Interpolation coefficients for edge start and end values
+  !> \param[in] d_start, d_end Interpolation coefficients for edge start and end values
+  !> \param[in] el2nd Node indices per element
+  !> \param[in] nd Node coordinates
+  !> \param[out] res_s Residual estimate for the primal problem per element
+  !> \param[out] res_w Residual estimate for the dual problem per element
+  !> \note New in elfe3D_GPR: Adapting this for the new PDE
   !---------------------------------------------------------------------
   subroutine calculate_elemental_residuals (num_non_PML_elements, non_PML_elements, k_0, el2ed, &
                                             S, Wg, Cg, Bg, &
@@ -224,7 +247,7 @@ contains
        end select
        ! Gauss weight = Ve(ni)*0.25 for 2nd order
        ! factor for residual equation
-       !> @CS, changed in v1.2.0 for the new PDE
+       !> \note Changed in v1.2.0 for the new PDE
        factor = (-1.0_dp) * k_0**2 * epsilon_r_eff(ni)
 
        ! initialise
@@ -319,9 +342,30 @@ contains
   end subroutine calculate_elemental_residuals
 
   !---------------------------------------------------------------------
-  !> @brief
-  !> subroutine for calculating face jumps
-  !> changed in elfe3D_GPR, @CS: Adapting this for the new PDE
+  !> \brief Calculate face jump contributions for error estimation
+  !> \details Computes elemental face jump terms for primal and dual problems using adjacent tetrahedral faces.
+  !> \param[in] M Number of elements in the mesh
+  !> \param[in] w Angular frequency
+  !> \param[in] el2ed Element-to-edge connectivity mapping
+  !> \param[in] el2nd Node indices per element
+  !> \param[in] el2neigh Element neighbor connectivity mapping
+  !> \param[in] el2edl Edge lengths for each element-edge pair
+  !> \param[in] ed_sign Local edge orientation signs
+  !> \param[in] nd Node coordinates
+  !> \param[in] a_start, a_end Interpolation coefficients at edge start and end
+  !> \param[in] b_start, b_end Interpolation coefficients at edge start and end
+  !> \param[in] c_start, c_end Interpolation coefficients at edge start and end
+  !> \param[in] d_start, d_end Interpolation coefficients at edge start and end
+  !> \param[in] epsilon_r_eff Effective permittivity per element
+  !> \param[in] mu Per-element magnetic permeability
+  !> \param[in] Ve Element volumes
+  !> \param[in] S Primal solution coefficients on edges
+  !> \param[in] Wg Dual solution coefficients on edges
+  !> \param[out] fjJ_s Face jump J for the primal problem per element
+  !> \param[out] fjJ_w Face jump J for the dual problem per element
+  !> \param[out] fjH_s Face jump H for the primal problem per element
+  !> \param[out] fjH_w Face jump H for the dual problem per element
+  !> \note Changed in elfe3D_GPR: Adapting this for the new PDE
   !---------------------------------------------------------------------
   subroutine calculate_face_jumps (M, w, el2ed, el2nd, el2neigh, &
                                    el2edl, ed_sign, nd, &
@@ -568,7 +612,7 @@ contains
 
           ! Calculate face jumps J with dot product for current face
           !factor = cmplx(0.0_dp, w, kind=dp) 
-          !@CS, changed in v1.2.0
+          !> \note Changed in v1.2.0
           jw = cmplx(0.0_dp, w, kind=dp)
           chi = jw*epsilon_0*epsilon_r_eff
           fjJ_tmp_s = dot_product(cmplx(face_normal,kind=dp), &
@@ -653,9 +697,21 @@ contains
   end subroutine calculate_face_jumps
 
   !---------------------------------------------------------------------
-  !> @brief
-  !> subroutine for computing error estimates for each element using 
-  !> residuals and phase jumps J and H
+  !> \brief
+  !> \brief Compute elemental error estimates from residuals and face jumps
+  !> \details Builds per-element error estimators using combinations of residuals and face jumps defined by the selected method.
+  !> \param[in] errorEst_method Error estimator selection method
+  !> \param[in] M Number of elements in the mesh
+  !> \param[in] res_s Primal residual estimates per element
+  !> \param[in] res_w Dual residual estimates per element
+  !> \param[in] fjJ_s Primal face jump J estimates per element
+  !> \param[in] fjJ_w Dual face jump J estimates per element
+  !> \param[in] fjH_s Primal face jump H estimates per element
+  !> \param[in] fjH_w Dual face jump H estimates per element
+  !> \param[out] eta_L Local error estimate per element
+  !> \param[out] Sum_eta_L Sum of local error estimates over all elements
+  !> \param[out] eta_s Primal error estimator per element
+  !> \param[out] eta_w Dual error estimator per element
   !---------------------------------------------------------------------
   subroutine compute_elemental_error_estimates (errorEst_method, M, &
                                                 res_s, res_w, &
@@ -769,10 +825,12 @@ contains
 
     
   !---------------------------------------------------------------------
-  !> @brief
-  !> TRIANGLE GEOMETRY
-  !> subroutine for calculating the unit normal on the triangle with 
-  !> corner nodes p1, p2 and p3
+  !> \brief Compute the unit normal vector for a triangle face
+  !> \param[in] p1 Coordinates of the first triangle vertex
+  !> \param[in] p2 Coordinates of the second triangle vertex
+  !> \param[in] p3 Coordinates of the third triangle vertex
+  !> \param[out] face_normal Unit normal vector for the triangle
+  !> \details Returns a normalized cross-product of the two triangle edge vectors.
   !---------------------------------------------------------------------
   subroutine calculate_face_normal(p1, p2, p3, face_normal)
   
@@ -815,10 +873,12 @@ contains
    end subroutine calculate_face_normal
    
     !-------------------------------------------------------------------
-    !> @brief
-    !> TRIANGLE GEOMETRY
-    !> subroutine for calculating the area of a triangle: 
-    !> Needs coordinates p1, p2, p3 and returns area
+    !> \brief Compute the area of a triangle defined by three vertices
+    !> \param[in] p1 Coordinates of the first triangle vertex
+    !> \param[in] p2 Coordinates of the second triangle vertex
+    !> \param[in] p3 Coordinates of the third triangle vertex
+    !> \param[out] area Triangle area computed by Heron's formula
+    !> \details Uses Heron's formula on the three edge lengths.
     !-------------------------------------------------------------------
     subroutine triangle_area(p1, p2, p3, area) 
     
@@ -855,11 +915,12 @@ contains
     end subroutine triangle_area 
     
     !-------------------------------------------------------------------
-    !> @brief
-    !> TRIANGLE GEOMETRY
-    !> subroutine for calculating the diameter of the triangle with
-    !> corner nodes p1, p2 and p3
-    !-------------------------------------------------------------------
+  !> \brief Compute the diameter of a triangle defined by three nodes
+  !> \details The diameter is the length of the longest edge among the three triangle edges.
+  !> \param[in] p1 Coordinates of the first triangle vertex
+  !> \param[in] p2 Coordinates of the second triangle vertex
+  !> \param[in] p3 Coordinates of the third triangle vertex
+  !> \param[out] diameter Length of the longest triangle edge
     subroutine triangle_diameter(p1, p2, p3, diameter)
   
     ! INPUT
@@ -903,9 +964,13 @@ contains
 
 
   !---------------------------------------------------------------------
-  !> TRIANGLE GEOMETRY
-  !> subroutine for calculating the midpoint of a triangle with corner 
-  !> nodes p1, p2 and p3
+  !> \brief Compute the centroid coordinates of a triangle
+  !> \param[in] p1 Coordinates of the first triangle vertex
+  !> \param[in] p2 Coordinates of the second triangle vertex
+  !> \param[in] p3 Coordinates of the third triangle vertex
+  !> \param[out] px x-coordinate of the triangle midpoint
+  !> \param[out] py y-coordinate of the triangle midpoint
+  !> \param[out] pz z-coordinate of the triangle midpoint
   !---------------------------------------------------------------------
   subroutine triangle_midpoint(p1, p2, p3, px, py, pz)
   
@@ -924,9 +989,14 @@ contains
 
 
   !---------------------------------------------------------------------
-  !> @brief
-  !> subroutine for calculating finding common nodes p1, p2 and p3 of 
-  !> 2 adjacent elements
+  !> \brief Determine the common face nodes of two adjacent tetrahedral elements
+  !> \param[in] elem1 Index of the first element
+  !> \param[in] elem2 Index of the second element
+  !> \param[in] el2nd Node indices per element
+  !> \param[in] nd Node coordinate array
+  !> \param[out] p1 Coordinates of the first shared node
+  !> \param[out] p2 Coordinates of the second shared node
+  !> \param[out] p3 Coordinates of the third shared node
   !---------------------------------------------------------------------
   subroutine find_common_nodes(elem1, elem2, el2nd, nd, p1, p2, p3)
   
@@ -966,10 +1036,10 @@ contains
 
 
   !---------------------------------------------------------------------
-  !> @brief
-  !> TETRAHEDRON GEOMETRY
-  !> subroutine for calculating the average height of a tetrahedron 
-  !> using its volume
+  !> \brief Compute the average height of a tetrahedron from its volume
+  !> \param[in] Ve_tet Volume of the tetrahedron
+  !> \param[out] h_tet Average tetrahedron height
+  !> \details Converts volume to height assuming a regular tetrahedral shape.
   !---------------------------------------------------------------------
   subroutine tetr_height(Ve_tet, h_tet)
   
@@ -987,9 +1057,24 @@ contains
 
 
   !---------------------------------------------------------------------
-  !> @brief
-  !> subroutine for calculating element influence sources at a
-  !> certain receiver location
+  !> \brief Calculate elemental influence source contributions at a receiver location
+  !> \param[in] u1 Receiver x-coordinate
+  !> \param[in] v1 Receiver y-coordinate
+  !> \param[in] w1 Receiver z-coordinate
+  !> \param[in] rec1_el Element index containing the receiver
+  !> \param[in] el2ed Element-to-edge connectivity mapping
+  !> \param[in] a_start, a_end Interpolation coefficients for edge start and end
+  !> \param[in] b_start, b_end Interpolation coefficients for edge start and end
+  !> \param[in] c_start, c_end Interpolation coefficients for edge start and end
+  !> \param[in] d_start, d_end Interpolation coefficients for edge start and end
+  !> \param[in] el2edl Edge lengths for each element-edge pair
+  !> \param[in] ed_sign Local edge orientation signs
+  !> \param[in] Ve Element volumes
+  !> \param[in] k_0 Free-space angular wave number
+  !> \param[in] p Source moment magnitude
+  !> \param[in] midp_source Source midpoint coordinates
+  !> \param[out] rec1_ed Edge indices of the receiver element
+  !> \param[out] infl_source Influence source contributions per receiver edge
   !---------------------------------------------------------------------
   subroutine calculate_elemental_influence_source (u1, v1, w1, &
                                                    rec1_el, el2ed, &
@@ -1098,10 +1183,22 @@ contains
 
 
   !---------------------------------------------------------------------
-  !> @brief
-  !> subroutine for writing .vtk files with error estimates for
-  !> viewing in paraview
-  !> modified name in elfe3D_GPR, @CS: subroutine name for clarity
+  !> \brief Write VTK output with error estimator fields
+  !> \details Appends error estimate scalars to an existing VTK mesh file for visualization.
+  !> \param[in] M Number of elements in the mesh
+  !> \param[in] refStep Refinement step number used for filename construction
+  !> \param[in] StringStep String representation of the refinement step
+  !> \param[in] StringEnding File suffix for VTK output
+  !> \param[in] MeshFileName Base VTK mesh filename
+  !> \param[in] errorEst Error estimate scalar per element
+  !> \param[in] eta_s Primal error estimator per element
+  !> \param[in] eta_w Dual error estimator per element
+  !> \param[in] Ve Element volumes per element
+  !> \param[in] fjJ_s Primal face jump J per element
+  !> \param[in] fjJ_w Dual face jump J per element
+  !> \param[in] fjH_s Primal face jump H per element
+  !> \param[in] fjH_w Dual face jump H per element
+  !> \note Modified name in elfe3D_GPR: subroutine name for clarity
   !---------------------------------------------------------------------
   subroutine write_errors_vtk (M, refStep, StringStep, StringEnding, &
                         MeshFileName, errorEst, eta_s, eta_w, &
