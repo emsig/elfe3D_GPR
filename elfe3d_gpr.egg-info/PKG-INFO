@@ -1,3 +1,14 @@
+Metadata-Version: 2.4
+Name: elfe3d-gpr
+Version: 0.9.0
+Summary: Python I/O layer for the elfe3D_GPR forward modelling solver
+Requires-Python: >=3.10
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: numpy>=1.26
+Requires-Dist: matplotlib>=3.8
+Dynamic: license-file
+
 # elfe3D GPR
 Modelling with the total electric field approach using finite elements in 3D
 
@@ -36,16 +47,6 @@ Paula Rulff, Laura M Buntin, Thomas Kalscheuer, Efficient goal-oriented  mesh re
 and refer to the `elfe3D` version you used via the ZENODO DOI: https://doi.org/10.5281/zenodo.13309721
 
 Do not forget to acknowledge `MUMPS` and `tetgen` developers!
-
-## Python package
-
-The Python I/O layer is now packaged with `pyproject.toml` and can be installed from the repository root:
-
-```bash
-pip install -e .
-```
-
-The supported import namespace is `elfe3d_gpr`.
 
 ## Documentation
 

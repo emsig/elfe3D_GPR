@@ -13,8 +13,8 @@ Usage examples for GPRSurvey showing all combinations:
 import numpy as np
 from pathlib import Path
 
-from survey import GPRSurvey
-from anomalies import BoxAnomaly, SphereAnomaly
+from .survey import GPRSurvey
+from .anomalies import BoxAnomaly, SphereAnomaly
 
 # ---------------------------------------------------------------------------
 # Shared constants

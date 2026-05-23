@@ -13,7 +13,7 @@ The z-interface computation is based on the following logic:
 
 import numpy as np
 from dataclasses import dataclass, field
-from materials import Material
+from .materials import Material
 
 
 @dataclass

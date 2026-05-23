@@ -26,7 +26,7 @@ The content includes user-facing guides, notebook workflows, and a scientific th
 
 ## Future work
 
-- package `io/` as an installable Python module
+- package the Python I/O layer as an installable module under the namespace `elfe3d_gpr`
 - integrate Doxygen output into RTD
 - add automated Python API reference once the package layout is stable
 - expand the example notebook documentation when the example workflows are finalized

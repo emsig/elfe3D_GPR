@@ -21,7 +21,7 @@ import numpy as np
 from itertools import groupby
 from pathlib import Path
 
-from tetgenprimitives import (
+from .tetgenprimitives import (
     Node,
     Region,
     create_rectangular_prism_nodes,
@@ -31,12 +31,12 @@ from tetgenprimitives import (
     create_cuboid_faces_from_nodes,
     create_half_cuboid_faces_from_nodes,
 )
-from domain import ModelDomain
-from geolayers import LayerStack
-from sources import SourceAntenna
-from receivers import ReceiverArray
-from anomalies import BoxAnomaly, SphereAnomaly
-from pml import PMLConfig
+from .domain import ModelDomain
+from .geolayers import LayerStack
+from .sources import SourceAntenna
+from .receivers import ReceiverArray
+from .anomalies import BoxAnomaly, SphereAnomaly
+from .pml import PMLConfig
 
 # Coordinate precision used throughout all file output.
 _COORD_DIGITS = 6

@@ -7,7 +7,7 @@ This page describes the core installation steps for `elfe3D_GPR` and the documen
 - Fortran compiler and environment for the core solver
 - `tetgen` for mesh generation
 - `MUMPS` for the direct linear algebra solver
-- Python 3.11+ for notebook-driven I/O and documentation building
+- Python 3.10+ for notebook-driven I/O and documentation building
 
 ## Build the Fortran solver
 
@@ -16,9 +16,23 @@ Follow the instructions in the repository or the original `elfe3D` documentation
 
 ## Python I/O layer
 
-The Python I/O layer is located in the `io/` folder. It is currently a curated set of scripts and modules used by notebooks for model setup, mesh generation, solver execution, and result handling.
+The Python I/O layer is located in the `io/` folder, and it is packaged as `elfe3d-gpr` for installation.
+The source files remain in `io/`, but the supported import namespace is `elfe3d_gpr`.
 
-The Python I/O layer is not yet published as a standalone installable package. For now, use the repository root as the working directory so the modules can be imported directly.
+Install the Python package from the repository root:
+
+```bash
+pip install -e .
+```
+
+This installs the package and makes the I/O helpers available as:
+
+```python
+from elfe3d_gpr.runner import ProjectPaths, run_tetgen, run_solver
+from elfe3d_gpr.inputs.survey import GPRSurvey
+```
+
+Legacy imports from `io` continue to work when the repository root is on `PYTHONPATH`, but the supported package namespace is `elfe3d_gpr`.
 
 ## Documentation build
 

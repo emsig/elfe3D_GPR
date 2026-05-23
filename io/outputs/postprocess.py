@@ -19,7 +19,7 @@ error_stats(err)                 – (mean, std, max_abs) of a finite error arra
 
 from __future__ import annotations
 import numpy as np
-from fieldreader import GPRDataset
+from .fieldreader import GPRDataset
 
 
 def field_error(ref: GPRDataset, test: GPRDataset, qty_idx: int) -> np.ndarray:

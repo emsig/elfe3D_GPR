@@ -44,16 +44,16 @@ import numpy as np
 from pathlib import Path
 from dataclasses import dataclass, field
 
-from materials import Material
-from geolayers import GeoLayer, LayerStack
-from domain import ModelDomain
-from anomalies import BoxAnomaly, SphereAnomaly
-from sources import SourceAntenna
-from receivers import ReceiverArray
-from solver import SolverConfig
-from pml import PMLConfig
-from writetetgenpoly import PolyAssembler
-from writeinputfiles import FEMInputWriter
+from .materials import Material
+from .geolayers import GeoLayer, LayerStack
+from .domain import ModelDomain
+from .anomalies import BoxAnomaly, SphereAnomaly
+from .sources import SourceAntenna
+from .receivers import ReceiverArray
+from .solver import SolverConfig
+from .pml import PMLConfig
+from .writetetgenpoly import PolyAssembler
+from .writeinputfiles import FEMInputWriter
 
 
 # =============================================================================

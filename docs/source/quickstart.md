@@ -6,14 +6,14 @@ This section shows the minimal steps to run `elfe3D_GPR` using the Python notebo
 
 1. Build the Fortran executable for the solver.
 2. Launch a Jupyter notebook or Python session from the repository root.
-3. Use the Python I/O layer in `io/` to define the survey, build input files, run TetGen, and execute the solver.
+3. Install the Python I/O package and use `elfe3d_gpr` to define the survey, build input files, run TetGen, and execute the solver.
 4. Inspect the output files in `out_<experiment_name>`.
 
 ## Minimal example
 
 ```python
-from io.runner import ProjectPaths, run_tetgen, run_solver
-from io.inputs.survey import GPRSurvey
+from elfe3d_gpr.runner import ProjectPaths, run_tetgen, run_solver
+from elfe3d_gpr.inputs.survey import GPRSurvey
 
 paths = ProjectPaths(master_dir=r'F:\Projects\\EMGeoInversion\\elfe3D_GPR')
 survey = GPRSurvey.build(

@@ -16,12 +16,12 @@ import textwrap
 from pathlib import Path
 from datetime import datetime
 
-from domain import ModelDomain
-from geolayers import LayerStack
-from sources import SourceAntenna
-from receivers import ReceiverArray
-from solver import SolverConfig
-from pml import PMLConfig
+from .domain import ModelDomain
+from .geolayers import LayerStack
+from .sources import SourceAntenna
+from .receivers import ReceiverArray
+from .solver import SolverConfig
+from .pml import PMLConfig
 
 
 _COORD_DIGITS = 6

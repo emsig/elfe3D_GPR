@@ -21,6 +21,8 @@ The notebooks are designed to highlight:
 - how to run TetGen and the Fortran solver
 - how to inspect and interpret the resulting field outputs
 
+These example notebooks now use the installed package namespace `elfe3d_gpr`, so they work cleanly after `pip install -e .`.
+
 ## Using the notebooks
 
 The notebooks are stored in the `examples/` folder and may be copied or extracted into other study folders. Their purpose is to demonstrate representative workflows rather than to act as standalone reference manuals.

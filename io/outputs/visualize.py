@@ -25,8 +25,8 @@ import matplotlib.pyplot as plt
 import matplotlib.patheffects as pe
 from matplotlib.ticker import FixedLocator, FixedFormatter
 
-from fieldreader import GPRDataset, QUANTITIES
-from postprocess import field_error, error_stats, field_simple_error
+from .fieldreader import GPRDataset, QUANTITIES
+from .postprocess import field_error, error_stats, field_simple_error
 
 
 # ---------------------------------------------------------------------------

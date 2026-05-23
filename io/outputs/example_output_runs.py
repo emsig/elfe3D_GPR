@@ -11,9 +11,9 @@ Uncomment the sections you need and set the paths at the top.
 import os
 import numpy as np
 
-from fieldreader import AnalyticalLoader, ElfeLoader, load_elfe_batch
-from postprocess import field_error, all_errors, error_stats
-from visualize   import (
+from .fieldreader import AnalyticalLoader, ElfeLoader, load_elfe_batch
+from .postprocess import field_error, all_errors, error_stats
+from .visualize   import (
     ReceiverLinePlot,
     ReceiverLineErrorPlot,
     ReceiverLineCombined,

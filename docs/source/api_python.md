@@ -4,15 +4,16 @@ This page provides a curated reference for the Python modules that are currently
 
 ## Current strategy
 
-The `io/` folder is not yet a complete installable Python package. For this reason, the documentation focuses on the main user-facing entry points rather than attempting a full auto-generated API.
+The `io/` folder is now packaged for installation, and the supported import namespace is `elfe3d_gpr`.
+This page continues to provide a curated reference for the core user-facing entry points.
 
 ## Key Python entry points
 
-- `io.runner.ProjectPaths`
-- `io.runner.run_tetgen`
-- `io.runner.run_solver`
-- `io.inputs.survey.IOConfig`
-- `io.inputs.survey.GPRSurvey.build`
+- `elfe3d_gpr.runner.ProjectPaths`
+- `elfe3d_gpr.runner.run_tetgen`
+- `elfe3d_gpr.runner.run_solver`
+- `elfe3d_gpr.inputs.survey.IOConfig`
+- `elfe3d_gpr.inputs.survey.GPRSurvey.build`
 
 ## Recommended reference approach
 
