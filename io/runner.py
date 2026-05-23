@@ -1,9 +1,6 @@
 """
 runner.py
 =========
-Thin glue between the input side (GPRSurvey) and output side (ElfeLoader,
-postprocess, visualize).  Does three things only:
-
   1. Knows where the executable lives and handles WSL  →  ProjectPaths
   2. Calls TetGen on the .poly file from survey.io     →  run_tetgen()
   3. Calls elfe3d_gpr                                  →  run_solver()

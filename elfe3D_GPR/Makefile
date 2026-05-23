@@ -1,18 +1,22 @@
-# choose compiler
-FCC = gfortran-10
+# Makefile for elfe3D_GPR
+# ==========================================
+# Configuration variables (override via environment or command line):
+#   FCC=<compiler>              - Fortran compiler (default: gfortran)
+#   MUMPS_LIB_DIR=<path>        - Path to MUMPS library (relative or absolute)
 
-# determine operating system
+# Compiler - allow override: make FCC=gfortran or FCC=gfortran-10
+FCC ?= gfortran-10
+
+# Path configuration - use environment variable or default to relative path
+# Example: MUMPS_LIB_DIR=../path/to/lib make
+MUMPS_LIB_DIR ?= ../Setup_Aid/elfe3D/Dependencies/MUMPS_5.7.3/lib
+
+# System information (for reference)
 OS = $(shell uname)
-# determine architecture
 ARCH = $(shell uname -m)
-# determine hostname
-HOST = $(shell hostname)
+HOSTNAME = $(shell hostname)
 
-# additional directory for shared libraries
-LIBDIR = /mnt/f/Projects/EMGeoInversion/Setup_Aid/elfe3D/Dependencies/MUMPS_5.7.3/lib
-
-
-# object files created during compilation
+# Object files created during compilation
 OBJ =   mod_constant.o \
 	mod_types_basic.o \
 	mod_util.o \
@@ -32,29 +36,23 @@ OBJ =   mod_constant.o \
 	mod_tetgen_operations.o \
 	elfe3d_gpr.o
 
+# Compiler flags
+COMMON_FFLAGS = -O2 -march=native -mtune=native -std=f2008 -ffree-form -ffree-line-length-none -fopenmp
 
-##-------------------------------------------------------------------------------------
-# Section with compiler flags for shared library and compiler options
-##
-## for gfortran
-##
-ifeq (${FCC},gfortran-10)
-ifeq (${OS},Linux)
-# link MUMPS libaries here!
-OBJUTIL = -L/usr/local/lib -L$(LIBDIR) -lpthread -lm -lzmumps -lmumps_common -lesmumps -lpord -lmpiseq -L/usr/lib -lscotch -lmetis -lopenblas
+# Compiler-specific optimizations
+ifeq ($(FCC),gfortran)
+    FFLAGS = $(COMMON_FFLAGS) -mfma -malign-data=cacheline -ftree-vectorize -ftree-vectorizer-verbose=2 -fopt-info-vec -fall-intrinsics
+else ifeq ($(FCC),gfortran-10)
+    FFLAGS = $(COMMON_FFLAGS) -mfma -malign-data=cacheline -ftree-vectorize -ftree-vectorizer-verbose=2 -fopt-info-vec -fall-intrinsics
+else
+    FFLAGS = $(COMMON_FFLAGS)
 endif
 
-# OpenMP library
-OMPLIB = -lgomp
-
-# compiler flags
-FFLAGS = -O2 -march=native -mtune=native -mfma -malign-data=cacheline -std=f2008 -ffree-form -ffree-line-length-none -ftree-vectorize -ftree-vectorizer-verbose=2 -fopt-info-vec -fopenmp -I/usr/include -fall-intrinsics
-# for warnings you can include here: 
-# -pedantic -Wall -Wopenmp-simd -Wvector-operation-performance
-
-# compile-time directives (for preprocessor etc.)
 COMPFLAGS = -x f95-cpp-input
-endif
+
+# MUMPS and related libraries
+OBJUTIL = -L$(MUMPS_LIB_DIR) -L/usr/local/lib -L/usr/lib -lpthread -lm -lzmumps -lmumps_common -lesmumps -lpord -lmpiseq -lscotch -lmetis -lopenblas
+
 ##-------------------------------------------------------------------------------------
 #
 #  Default command.
@@ -66,15 +64,17 @@ endif
 #  Local help file.
 #
 help:
-	@echo "   make clean  -  remove all object, module and executable files"
 	@echo "   make all    -  make all object, module and executable files"
-
-#
-# create $(LIBDIR), if it does not exist
-#
-$(LIBDIR):
-	mkdir -p $(LIBDIR)
-
+	@echo "   make clean  -  remove all object, module and executable files"
+	@echo ""
+	@echo "Configuration (override via environment or command line):"
+	@echo "   FCC=<compiler>              - Fortran compiler (default: $(FCC))"
+	@echo "   MUMPS_LIB_DIR=<path>        - Path to MUMPS library (default: $(MUMPS_LIB_DIR))"
+	@echo ""
+	@echo "Examples:"
+	@echo "   make all"
+	@echo "   make FCC=gfortran-10 all"
+	@echo "   make MUMPS_LIB_DIR=/opt/mumps/lib all"
 
 #
 # Dependencies of object files and their compilation rules
@@ -92,7 +92,6 @@ all: $(OBJ)
 # clean up
 .PHONY: clean
 
-ifeq (${OS},Linux)
 clean:
-	-\rm *.o *.mod in/*.vol
-endif
+	-rm *.o *.mod in/*.vol
+	@echo "Clean complete"

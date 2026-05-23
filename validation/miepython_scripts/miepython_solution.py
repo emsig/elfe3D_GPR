@@ -37,10 +37,9 @@ def dipole_field(r_obs: np.ndarray, r_src: np.ndarray, eps_bg: np.complex128, k:
     R = np.linalg.norm(r)
 
     r_hat = r / R
-    kr = k * R
 
     # E-field terms
-    exp_term = np.exp(-1j * kr) / (4 * np.pi)
+    exp_term = np.exp(-1j * k * R) / (4 * np.pi)
     term1 = k**2 * np.cross(np.cross(r_hat, p), r_hat) / R
     term2 = (1/R**3 + 1j * k / R**2) * (3 * r_hat * np.dot(r_hat, p) - p)
 
