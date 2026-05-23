@@ -37,3 +37,8 @@ and refer to the `elfe3D` version you used via the ZENODO DOI: https://doi.org/1
 
 Do not forget to acknowledge `MUMPS` and `tetgen` developers!
 
+## Documentation
+
+The repository includes new RTD-ready documentation in `docs/source/`.
+The documentation covers installation, the Python I/O workflow, examples, the `elfe3D_GPR` theory, and the Python and Fortran API reference.
+
