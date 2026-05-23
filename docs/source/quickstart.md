@@ -8,6 +8,7 @@ This section shows the minimal steps to run `elfe3D_GPR` using the Python notebo
 2. Launch a Jupyter notebook or Python session from the repository root.
 3. Install the Python I/O package and use `elfe3d_gpr` to define the survey, build input files, run TetGen, and execute the solver.
 4. Inspect the output files in `out_<experiment_name>`.
+5. Start with `examples/01_wholespace_air.ipynb` as the guided beginner notebook.
 
 ## Minimal example
 

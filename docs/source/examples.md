@@ -7,10 +7,10 @@ They provide hands-on workflows rather than full reference documentation.
 
 Each notebook showcases a different modelling scenario and a different aspect of the workflow:
 
-- `air.ipynb` — air-only domain, verifying the basic source and receiver pipeline
-- `02_homogeneous_earth` — homogeneous earth layer, demonstrating a simple subsurface model
-- `03_two_layered_earth` — two-layer earth, showing layer interfaces and mesh adaptation
-- `04_anomalous_earth` — anomaly cases, illustrating heterogeneity and target response
+- `01_wholespace_air.ipynb` — a guided beginner tutorial for the air-only case, verifying the basic source, mesh, solver, and postprocessing pipeline
+- `02_homogeneous_earth.ipynb` — homogeneous earth layer, demonstrating a simple subsurface model
+- `03_two_layered_earth.ipynb` — two-layer earth, showing layer interfaces and mesh adaptation
+- `04_anomalous_earth.ipynb` — anomaly cases, illustrating heterogeneity and target response
 
 ## What the notebooks show
 

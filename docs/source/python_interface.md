@@ -28,6 +28,7 @@ from elfe3d_gpr.runner import ProjectPaths, run_tetgen, run_solver
 from elfe3d_gpr.inputs.survey import GPRSurvey
 ```
 
+The first example notebook, `examples/01_wholespace_air.ipynb`, shows the recommended package-based workflow.
 Legacy imports from `io` continue to work when the repository root is on `PYTHONPATH`, but the supported package namespace is `elfe3d_gpr`.
 
 To document the Python I/O layer, we maintain a curated reference rather than a full auto-generated API. This allows the docs to stay aligned with the notebooks and the current development state.
