@@ -1,6 +1,6 @@
 solver                  2
 model_size
--0.6	-0.6	-1.3
+-0.6	-0.6	-0.6
 1.6	0.6	0.6
 num_freq                1
 100000000.0
@@ -53,8 +53,8 @@ num_rec                 48
 0.9617 0.0 -7.5e-05
 0.98085 0.0 -7.5e-05
 1.0 0.0 -7.5e-05
-output_E_file           out_anomaly_sphere_hs/electric_fields
-output_H_file           out_anomaly_sphere_hs/magnetic_fields
+output_E_file           out_air_only/electric_fields
+output_H_file           out_air_only/magnetic_fields
 source_type             6
 -0.00015 0.0 0.025
 0.00015 0.0 0.025
@@ -62,7 +62,7 @@ current_direction       1
 source_moment           1
 PEC_present             0
 num_PEC                 0
-model_file_name         in/GPR_model_anomaly_sphere_hs.
+model_file_name         in/GPR_model_air_only.
 maxRefSteps             0
 maxUnknowns             5000000
 betaRef                 0.85
