@@ -14,3 +14,4 @@ empymod*
 *.pyc
 
 !io/outputs/
+elfe3d_gpr.egg-info/
