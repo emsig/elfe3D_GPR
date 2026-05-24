@@ -8,7 +8,7 @@ clc
 z = 0.025; % Height of source above surface
 r_all = linspace(0.1, 1, 48); % Radial offsets along surface
 epsr1 = 4; % Relative permittivity
-sigma1 = 1e-16; % Conductivity
+sigma1 = 1e-4; % Conductivity
 c0 = 299792458; % Free space velocity
 mu = 4e-7 * pi; % Magnetic permeability
 fc = 1e8; % Center frequency of Ricker wavelet
@@ -64,7 +64,7 @@ for ir = 1:length(r_all)
 end
 
 % Write results to a CSV file with new header and order
-csv_filename = sprintf('Exx_4_%.0fMHz_14.csv', (freq/1e6));
+csv_filename = sprintf('Exx_4_%.0fMHz_NR.csv', (freq/1e6));
 header = {'Offset', ...
     'Endfire_Amplitude','Endfire_Phase','Endfire_Real','Endfire_Imag', ...
     'Broadside_Amplitude','Broadside_Phase','Broadside_Real','Broadside_Imag', ...
