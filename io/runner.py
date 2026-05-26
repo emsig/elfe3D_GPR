@@ -44,11 +44,13 @@ class ProjectPaths:
                  False → run natively (already inside WSL)
     """
     master_dir: str
-    exec_rel:   str  = r"elfe3d_gpr"
+    exec_rel:   str  = ""
     use_wsl:    bool = True
 
     def exec_path(self) -> Path:
         """Absolute path to the elfe3d_gpr executable."""
+        if self.exec_rel is "":
+            self.exec_rel = "elfe3d_gpr"
         return Path(self.master_dir) / self.exec_rel
 
     def to_wsl(self, p) -> str:
