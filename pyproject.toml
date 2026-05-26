@@ -3,9 +3,9 @@ requires = ["setuptools>=65.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "elfe3d-gpr"
+name = "elfe3d-gpr-io"
 version = "0.9.0"
-description = "Python I/O layer for the elfe3D_GPR forward modelling solver"
+description = "Python I/O wrapper for the elfe3D_GPR forward modelling solver"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
@@ -14,5 +14,5 @@ dependencies = [
 ]
 
 [tool.setuptools]
-package-dir = { "elfe3d_gpr" = "io" }
-packages = ["elfe3d_gpr", "elfe3d_gpr.inputs", "elfe3d_gpr.outputs"]
+package-dir = { "elfe3d_gpr_io" = "io" }
+packages = ["elfe3d_gpr_io", "elfe3d_gpr_io.inputs", "elfe3d_gpr_io.outputs"]
