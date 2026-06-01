@@ -23,10 +23,12 @@ Usage in a notebook
 
 from __future__ import annotations
 
+import shlex
 import subprocess
 import time
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Sequence, Union
 
 
 @dataclass
@@ -39,54 +41,65 @@ class ProjectPaths:
     master_dir : absolute path to the master\\ folder
     exec_rel   : path to elfe3d_gpr relative to master_dir
                  default: elfe3D_GPR\\elfe3d_gpr
-    use_wsl    : True  → prefix subprocess calls with "wsl" and convert
+    use_wsl    : True  : prefix subprocess calls with "wsl" and convert
                          Windows paths to /mnt/<drive>/... format
-                 False → run natively (already inside WSL)
+                 False : run natively on Linux
     """
-    master_dir: str
-    exec_rel:   str  = ""
+    master_dir: Union[str, Path]
+    exec_rel:   str = ""
     use_wsl:    bool = True
 
     def exec_path(self) -> Path:
         """Absolute path to the elfe3d_gpr executable."""
-        if self.exec_rel is "":
-            self.exec_rel = "elfe3d_gpr"
-        return Path(self.master_dir) / self.exec_rel
+        exec_rel = self.exec_rel if self.exec_rel != "" else "elfe3d_gpr"
+        return Path(self.master_dir) / exec_rel
 
-    def to_wsl(self, p) -> str:
-        """Convert a Windows path to its WSL equivalent.
-        C:\\Users\\foo\\bar  →  /mnt/c/Users/foo/bar
-        """
-        s = str(p).replace("\\", "/")
-        if len(s) >= 2 and s[1] == ":":
-            s = f"/mnt/{s[0].lower()}/{s[3:]}"
-        return s
+    def to_target_path(self, p: Union[str, Path]) -> str:
+        """Convert a path to the runtime target format."""
+        p = Path(p)
+        if self.use_wsl:
+            s = str(p).replace("\\", "/")
+            if len(s) >= 2 and s[1] == ":":
+                s = f"/mnt/{s[0].lower()}/{s[3:]}"
+            return s
+        return str(p)
 
     def _prefix(self, *args) -> list[str]:
         return (["wsl"] + list(args)) if self.use_wsl else list(args)
 
 
-def _stream(cmd: list[str], label: str) -> None:
+def _stream(
+    cmd: Union[list[str], str],
+    label: str,
+    cwd: Union[str, Path, None] = None,
+    shell: bool = False,
+) -> None:
     """
     Run *cmd* and stream every output line to the notebook cell in real time.
     Raises RuntimeError on non-zero exit.
     """
     import sys
-    print(f"── {label} {'─' * (50 - len(label))}")
-    print(f"   {' '.join(cmd)}\n")
+    label_line = f"── {label} {'─' * max(1, 50 - len(label))}"
+    print(label_line)
+    if isinstance(cmd, list):
+        print(f"   {' '.join(cmd)}\n")
+    else:
+        print(f"   {cmd}\n")
 
-    t0   = time.time()
+    t0 = time.time()
     proc = subprocess.Popen(
         cmd,
+        cwd=str(cwd) if cwd is not None else None,
         stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,   # merge stderr into stdout
+        stderr=subprocess.STDOUT,
         text=True,
-        bufsize=1,                  # line-buffered
+        bufsize=1,
+        shell=shell,
     )
 
     for line in proc.stdout:
         print(line, end="")
-        sys.stdout.flush()          # forces Jupyter to render immediately
+        sys.stdout.flush()
 
     proc.wait()
     elapsed = time.time() - t0
@@ -94,68 +107,105 @@ def _stream(cmd: list[str], label: str) -> None:
     if proc.returncode != 0:
         raise RuntimeError(f"{label} failed (exit {proc.returncode})")
 
-    print(f"\n✓  done in {elapsed:.1f}s")
+    print(f"\nDone in {elapsed:.1f}s")
+
+
+def _command_tokens(binary: str, flags: str, extra: Sequence[str] | None = None) -> list[str]:
+    tokens = [binary] + shlex.split(flags)
+    if extra:
+        tokens += list(extra)
+    return tokens
 
 
 def run_tetgen(
-    paths,
+    paths: ProjectPaths,
     poly_file,
-    flags:  str = "-pq1.2kAaen",
+    flags: str = "-pq1.2kAaen",
     binary: str = "/usr/bin/tetgen",
 ) -> None:
     """
     Mesh the geometry with TetGen.
 
-    tetgen15 is an alias in ~/.bashrc pointing to /usr/bin/tetgen — aliases
-    are invisible to bash -c, so we use the real binary path directly.
+    On Windows with WSL enabled the command is run inside WSL.
+    On native Linux the command is run directly from the mesh folder.
 
         run_tetgen(paths, survey.io.poly_file)
-
-    Output is streamed line-by-line.  Raises RuntimeError on failure.
     """
-    import sys
     poly_path = Path(poly_file)
-    wsl_dir   = paths.to_wsl(poly_path.parent)
-    wsl_poly  = poly_path.name
-    bash_cmd  = f"cd {wsl_dir} && {binary} {flags} {wsl_poly}"
-    cmd       = ["wsl", "bash", "-c", bash_cmd]
+    cmd = _command_tokens(binary, flags, [poly_path.name])
 
-    print(f"\u2500\u2500 TetGen {chr(9472) * 44}")
-    print(f"   {bash_cmd}\n")
+    if paths.use_wsl:
+        wsl_dir = paths.to_target_path(poly_path.parent)
+        wsl_cmd = shlex.join(cmd)
+        bash_cmd = f"cd {wsl_dir} && {wsl_cmd}"
+        cmd = ["wsl", "bash", "-c", bash_cmd]
+        cwd = None
+    else:
+        cwd = poly_path.parent
 
-    t0   = time.time()
-    proc = subprocess.Popen(
-        cmd,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        text=True,
-        bufsize=1,
-    )
-    for line in proc.stdout:
-        print(line, end="")
-        sys.stdout.flush()
-    proc.wait()
-
-    if proc.returncode != 0:
-        raise RuntimeError(f"TetGen failed (exit {proc.returncode})")
-    print(f"\n\u2713  done in {time.time() - t0:.1f}s")
+    _stream(cmd, "TetGen", cwd=cwd)
 
 
 def run_solver(paths: ProjectPaths, survey) -> None:
     """
     Run the elfe3d_gpr FEM solver.
 
-    Runs from survey.io.base_dir so the exe finds elfe3D_input.txt in its
-    working directory — no file copying needed.  The exe is called by its
-    absolute WSL path.
-
-        run_solver(paths, survey)
-
-    Output is streamed line-by-line.  Raises RuntimeError on failure.
+    On Windows with WSL enabled the executable is run inside WSL.
+    On native Linux it is run directly from the survey input folder.
     """
-    input_dir = paths.to_wsl(survey.io.base_dir)
-    exe_path  = paths.to_wsl(paths.exec_path())
-    bash_cmd  = f"cd {input_dir} && {exe_path}"
-    cmd       = ["wsl", "bash", "-c", bash_cmd]
+    input_dir = Path(survey.io.base_dir)
+    exe_path = paths.exec_path()
 
-    _stream(cmd, "elfe3d_gpr")
+    if paths.use_wsl:
+        wsl_dir = paths.to_target_path(input_dir)
+        wsl_exe = paths.to_target_path(exe_path)
+        bash_cmd = f"cd {wsl_dir} && {wsl_exe}"
+        cmd = ["wsl", "bash", "-c", bash_cmd]
+        cwd = None
+    else:
+        cmd = [str(exe_path)]
+        cwd = input_dir
+
+    _stream(cmd, "elfe3d_gpr", cwd=cwd)
+
+
+def run_custom_command(
+    paths: ProjectPaths,
+    command,
+    cwd=None,
+    use_wsl: bool | None = None,
+    shell: bool = False,
+) -> None:
+    """
+    Run a custom command with the same WSL/native routing rules.
+
+    Parameters
+    ----------
+    command : list[str] or str
+        If list, it is executed directly. If str and shell=False, it is split.
+    cwd : path-like or None
+        Working directory for the command.
+    use_wsl : bool | None
+        Use WSL when True, native Linux when False, otherwise use paths.use_wsl.
+    shell : bool
+        Pass to subprocess.Popen when running natively.
+    """
+    if use_wsl is None:
+        use_wsl = paths.use_wsl
+
+    if isinstance(command, str) and not shell:
+        command = shlex.split(command)
+
+    if use_wsl:
+        cwd_path = Path(cwd) if cwd is not None else Path.cwd()
+        wsl_cwd = paths.to_target_path(cwd_path)
+        command_text = shlex.join(command) if isinstance(command, list) else command
+        bash_cmd = f"cd {wsl_cwd} && {command_text}"
+        cmd = ["wsl", "bash", "-c", bash_cmd]
+        cwd = None
+        shell = False
+    else:
+        cmd = command
+        cwd = Path(cwd) if cwd is not None else None
+
+    _stream(cmd, "custom command", cwd=cwd, shell=shell)
