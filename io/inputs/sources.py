@@ -30,8 +30,7 @@ class SourceAntenna:
     current            : source current [A]
     source_moment      : source moment flag
     num_segments       : number of discretisation segments along antenna
-    ricker_central_f   : central Ricker wavelet frequency [Hz]
-    num_points_per_range : number of frequency points in the sweep
+    f_list             : list of frequency values [Hz]
     m                  : mesh refinement factor around source box
     box_present        : whether a source refinement box is included
     s_f                : antenna length divisor (length = wavelength / s_f)
@@ -50,10 +49,7 @@ class SourceAntenna:
     current: float
     source_moment: int
     num_segments: int
-    ricker_central_f: float
-
-    # Required — frequency sweep
-    num_points_per_range: int
+    f_list: list[float]
 
     # Required — sizing
     m: int
@@ -92,13 +88,11 @@ class SourceAntenna:
     # ------------------------------------------------------------------
 
     def _compute_frequency_list(self) -> None:
-        if self.num_points_per_range > 1:
-            self.f_list = [
-                i * self.ricker_central_f * (6.0 / self.num_points_per_range)
-                for i in range(1, self.num_points_per_range + 1)
-            ]
-        else:
-            self.f_list = [self.ricker_central_f]
+        if not self.f_list:
+            raise ValueError("f_list must contain at least one frequency value in Hz.")
+        self.f_list = [float(f) for f in self.f_list]
+        if any(f <= 0.0 for f in self.f_list):
+            raise ValueError("All frequencies in f_list must be positive.")
 
     @property
     def f_low(self) -> float:
@@ -176,6 +170,6 @@ class SourceAntenna:
             f"SourceAntenna("
             f"type={self.source_type}, "
             f"pos={self.antenna_position}, "
-            f"f_central={self.ricker_central_f/1e6:.1f} MHz, "
+            f"f_low={self.f_low/1e6:.1f} MHz, "
             f"length={self.length*1e3:.2f} mm)"
         )

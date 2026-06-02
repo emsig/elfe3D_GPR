@@ -184,6 +184,7 @@ class GPRSurvey:
         current: float = 1.0,
         source_moment: int = 1,
         num_segments: int = 1,
+        f_list: list[float] | None = None,
         ricker_central_f: float = 100e6,
         num_points_per_range: int = 1,
         m: int = 5,
@@ -329,15 +330,16 @@ class GPRSurvey:
             pml_decay_type=pml_decay_type,
         )
 
-        # ── Mesh sizing (needs f_low, which needs the frequency list) ─
-        # We need f_low before building SourceAntenna, so compute it here.
-        if num_points_per_range > 1:
-            f_list = [
-                i * ricker_central_f * (6.0 / num_points_per_range)
-                for i in range(1, num_points_per_range + 1)
-            ]
-        else:
-            f_list = [ricker_central_f]
+        # ── Frequency list and mesh sizing ───────────────────────────
+        if f_list is None:
+            if ricker_central_f != 100e6 or num_points_per_range != 1:
+                raise ValueError(
+                    "Legacy ricker_central_f/num_points_per_range behavior is deprecated. "
+                    "Use f_list=[...frequency values in Hz...] instead."
+                )
+            f_list = [100e6]
+        if len(f_list) == 0:
+            raise ValueError("f_list must contain at least one frequency value.")
         f_low = f_list[0]
 
         layers.compute_all_mesh_sizing(f_low, least_samples_per_wavelength)
@@ -353,8 +355,7 @@ class GPRSurvey:
             current=current,
             source_moment=source_moment,
             num_segments=num_segments,
-            ricker_central_f=ricker_central_f,
-            num_points_per_range=num_points_per_range,
+            f_list=f_list,
             m=m,
             box_present=box_present,
             s_f=s_f,
