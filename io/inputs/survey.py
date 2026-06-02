@@ -473,7 +473,7 @@ class GPRSurvey:
         )
         assembler.evaluate_all_input_data()
         assembler.write(self.io.poly_file)
-        print(f"Written: {self.io.poly_file}")
+        # print(f"Written: {self.io.poly_file}")
 
         # ── Write FEM input files ────────────────────────────────────
         writer = FEMInputWriter(
@@ -489,7 +489,7 @@ class GPRSurvey:
             output_H_file=self.io.output_H_file,
         )
         writer.write_all(regions=assembler.regions)
-        print(f"Written: {self.io.input_dir / 'elfe3D_input.txt'}")
-        print(f"Written: {self.io.input_dir / 'source.txt'}")
-        print(f"Written: {self.io.input_dir / 'regionparameters.txt'}")
+        # print(f"Written: {self.io.input_dir / 'elfe3D_input.txt'}")
+        # print(f"Written: {self.io.input_dir / 'source.txt'}")
+        # print(f"Written: {self.io.input_dir / 'regionparameters.txt'}")
         print("Input generation complete.")

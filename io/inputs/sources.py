@@ -65,11 +65,16 @@ class SourceAntenna:
     # ------------------------------------------------------------------
     # Derived fields (computed in __post_init__, not set by user)
     # ------------------------------------------------------------------
-    f_list: list[float] = field(default_factory=list, init=False)
     length: float = field(default=0.0, init=False)
     x_extents: list[float] = field(default_factory=list, init=False)
     y_extents: list[float] = field(default_factory=list, init=False)
     z_extents: list[float] = field(default_factory=list, init=False)
+    x_disc: list[float] = field(default_factory=list, init=False)
+    y_disc: list[float] = field(default_factory=list, init=False)
+    z_disc: list[float] = field(default_factory=list, init=False)
+    box_x: list[list[float]] = field(default_factory=list, init=False)
+    box_y: list[list[float]] = field(default_factory=list, init=False)
+    box_z: list[list[float]] = field(default_factory=list, init=False)
     x_disc: list[float] = field(default_factory=list, init=False)
     y_disc: list[float] = field(default_factory=list, init=False)
     z_disc: list[float] = field(default_factory=list, init=False)

@@ -80,11 +80,11 @@ def _stream(
     """
     import sys
     label_line = f"── {label} {'─' * max(1, 50 - len(label))}"
-    print(label_line)
-    if isinstance(cmd, list):
-        print(f"   {' '.join(cmd)}\n")
-    else:
-        print(f"   {cmd}\n")
+    # print(label_line)
+    # if isinstance(cmd, list):
+    #     print(f"   {' '.join(cmd)}\n")
+    # else:
+    #     print(f"   {cmd}\n")
 
     t0 = time.time()
     proc = subprocess.Popen(
