@@ -9,7 +9,7 @@
 %   output_total     : primary + scattered
 %
 % Sphere is on the source vertical axis (x=y=0), depth z_sph.
-% Polarisability: quasi-static Clausius-Mossotti (valid when a << lambda_1).
+% Polarisability: quasi-static Clausius-Mossotti (accurate when a << lambda_1).
 %
 % Requires: hfhorx.m, hfhorx_depth.m
 % =========================================================================
@@ -30,7 +30,7 @@ fc     = 1e8;                      % Centre frequency of Ricker wavelet [Hz]
 freq   = fc;
 phi    = pi * [0, 45, 90] / 180;   % Endfire, oblique, broadside [rad]
 
-% Sphere anomaly parameters (matches Python SphereAnomaly definition)
+% Sphere anomaly parameters (matches the example notebook definition)
 sphere_epsr   = 20;                % Sphere relative permittivity
 sphere_sigma  = 1e-4;              % Sphere conductivity [S/m]
 sphere_mur    = 1.0;               % Sphere relative permeability (no magnetic contrast)
@@ -40,7 +40,7 @@ sphere_radius = c0 / (freq * 16);  % lambda_air / 16 at fc [m]
 
 z_sph = abs(sphere_z);             % Positive depth used in kernels [m]
 
-fprintf('=== Sphere anomaly — half-space model ===\n');
+fprintf('=== Sphere anomaly in half-space model ===\n');
 fprintf('Sphere: a = %.4f m,  z = %.3f m,  epsr = %g,  sigma = %g S/m\n', ...
         sphere_radius, sphere_z, sphere_epsr, sphere_sigma);
 
@@ -53,7 +53,7 @@ eta1 = eta0 * epsr1  + sigma1;
 eta_sph = eta0 * sphere_epsr + sphere_sigma;
 
 % =========================================================================
-% Sphere polarisability — Clausius-Mossotti, quasi-static
+% Sphere polarisability: Clausius-Mossotti, quasi-static
 %
 %   alpha = 4*pi*eps1 * a^3 * (eps_sph - eps1) / (eps_sph + 2*eps1)
 %
@@ -93,7 +93,6 @@ mxbnd = sqrt((40 / abs(z))^2 + abs(eta0 * smu));
 %   exx_sph = (cos(0)*0 - vc1_sph) / (4*pi) = -vc1_sph / (4*pi)
 %
 % Kernel: hfhorx_depth with a = z (source height), z1 = z_sph.
-% See hfhorx_depth.m for derivation.
 % =========================================================================
 r_sph = 0;
 
@@ -137,7 +136,7 @@ for ir = 1:length(r_all)
 
     % ---- Scattered field from induced x-dipole at sphere --------------------
     % Kernel: hfhorx_depth with a = 0 (receivers AT the surface; a=0 follows
-    % from source-receiver reciprocity — see hfhorx_depth.m header).
+    % from source-receiver reciprocity).
     %
     % phi-dependence via cos(2*phi) carries through for all receiver azimuths:
     %   phi=0   (endfire):   exx_sc = p_x*(+vc2_sc - vc1_sc)/(4*pi)
@@ -157,7 +156,7 @@ for ir = 1:length(r_all)
     % ---- Total field --------------------------------------------------------
     exx_t = exx_p + exx_sc;
 
-    % ---- Pack output — column order matches exx_radial_halfspace.m ----------
+    % Output fields
     output_primary(ir, 1)  = r;
     output_primary(ir, 2)  = abs(exx_p(1));    output_primary(ir, 3)  = angle(exx_p(1));
     output_primary(ir, 4)  = real(exx_p(1));   output_primary(ir, 5)  = imag(exx_p(1));
