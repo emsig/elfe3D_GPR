@@ -191,9 +191,9 @@ header = {'Offset', ...
     'Broadside_Amplitude','Broadside_Phase','Broadside_Real','Broadside_Imag', ...
     'Oblique_Amplitude','Oblique_Phase','Oblique_Real','Oblique_Imag'};
 
-csv_p = sprintf('Exx_sphere2_primary_%g_%.0fMHz.csv',   epsr1, freq/1e6);
-csv_s = sprintf('Exx_sphere2_scattered_%g_%.0fMHz.csv', epsr1, freq/1e6);
-csv_t = sprintf('Exx_sphere2_total_%g_%.0fMHz.csv',     epsr1, freq/1e6);
+csv_p = sprintf('Exx_sphere_primary_%g_%.0fMHz.csv',   epsr1, freq/1e6);
+csv_s = sprintf('Exx_sphere_scattered_%g_%.0fMHz.csv', epsr1, freq/1e6);
+csv_t = sprintf('Exx_sphere_total_%g_%.0fMHz.csv',     epsr1, freq/1e6);
 
 mats  = {output_primary, output_scattered, output_total};
 fnames = {csv_p, csv_s, csv_t};
