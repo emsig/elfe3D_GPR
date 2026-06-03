@@ -21,7 +21,7 @@ clc
 % Parameters
 % =========================================================================
 z      = 0.025;                    % Source height above surface [m]
-r_all  = linspace(0.1, 3.0, 100); % Receiver horizontal offsets [m]
+r_all  = linspace(0.1, 1.0, 48); % Receiver horizontal offsets [m]
 epsr1  = 4;                        % Layer 1 relative permittivity
 sigma1 = 1e-4;                     % Layer 1 conductivity [S/m]
 c0     = 299792458;                % Free-space velocity [m/s]
