@@ -11,7 +11,7 @@
 *.pyc
 
 out*
-data/*
+data/data_empymod/*
 empymod*
 *.egg-info/
 __pycache__/
