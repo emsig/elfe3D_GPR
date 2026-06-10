@@ -1,26 +1,47 @@
-﻿# elfe3D_GPR Documentation
+﻿# elfe3D_GPR Manual
 
-Welcome to the official documentation for `elfe3D_GPR`, the 3D finite-element forward modelling framework for ground penetrating radar (GPR)!
+Welcome to `elfe3D_GPR` — a 3D finite-element forward modelling framework for Ground Penetrating Radar (GPR).
 
-We mention a practical introduction to the 3D finite-element ground penetrating radar solver, the Python I/O wrapper, the example workflows, and the scientific background behind the implementation.
-
+This site is organised to help three audiences: new users (quick start and examples), Python users (I/O wrapper and notebooks), and developers/researchers (theory and Fortran API).
 
 ```{toctree}
 :maxdepth: 2
-:caption: Contents:
+:caption: Getting Started
 
 overview
 installation
 quickstart
+```
+
+```{toctree}
+:maxdepth: 2
+:caption: User Guide
+
 workflow
 python_interface
 inputs_and_models
 outputs
 examples
-elfe3D_GPR_theory
-api_python
-api_fortran
-developer_guide
 ```
 
-The Fortran solver API is documented via generated Doxygen and is exposed as an external reference.
+```{toctree}
+:maxdepth: 2
+:caption: Reference
+
+api_python
+api_fortran
+```
+
+```{toctree}
+:maxdepth: 2
+:caption: Theory & Background
+
+elfe3D_GPR_theory
+```
+
+```{toctree}
+:maxdepth: 2
+:caption: Developer Resources
+
+developer_guide
+```
