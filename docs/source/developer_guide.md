@@ -27,6 +27,11 @@ The content includes user-facing guides, notebook workflows, and a scientific th
 ## Future work
 
 - package the Python I/O layer as an installable module under the namespace `elfe3d_gpr`
-- integrate Doxygen output into RTD
+- integrate Doxygen output into RTD as an external reference for the Fortran API
 - add automated Python API reference once the package layout is stable
 - expand the example notebook documentation when the example workflows are finalized
+
+## Fortran API documentation
+
+The Fortran solver API is intended to be exposed through external Doxygen-generated HTML.
+This documentation will be referenced from the RTD site using a direct external link such as :doxygen:`index.html`, instead of a local RTD page.

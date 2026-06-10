@@ -1,16 +1,41 @@
 ﻿# Quick Start
 
-This section shows the minimal steps to run `elfe3D_GPR` using the Python notebook workflow.
+This page describes two minimal ways to start using `elfe3D_GPR`.
 
-## Quick start workflow
+## Option A: native Fortran run
 
-1. Build the Fortran executable for the solver.
-2. Launch a Jupyter notebook or Python session from the repository root.
-3. Install the Python I/O package and use `elfe3d_gpr` to define the survey, build input files, run TetGen, and execute the solver.
-4. Inspect the output files in `out_<experiment_name>`.
-5. Start with `examples/01_wholespace_air.ipynb` as the guided beginner notebook.
+The simplest path is to run the compiled Fortran solver directly with the example input files provided in the repository.
+This is the default `elfe3D`-style workflow and is useful for validating the solver executable before using the Python wrapper.
 
-## Minimal example
+Steps:
+
+1. Build the Fortran solver in `elfe3D_GPR/`.
+2. Change to the `elfe3D_GPR/` directory.
+3. Run the solver executable, for example:
+
+```bash
+cd elfe3D_GPR
+./elfe3d_gpr
+```
+
+4. Inspect the output in the matching `out_*` folder.
+
+## Option B: notebook workflow with the Python I/O wrapper
+
+The recommended workflow for new work is to use the Python I/O wrapper and the example notebook in `examples/01_homogeneous_free-space.ipynb`.
+This approach uses the installed package namespace `elfe3d_gpr` and demonstrates the full model build → TetGen → solver → output cycle.
+
+1. Install or activate your Python environment from the repository root.
+2. Install the Python wrapper:
+
+```bash
+pip install -e .
+```
+
+3. Open `examples/01_homogeneous_free-space.ipynb` in JupyterLab or Jupyter Notebook.
+4. Run the notebook to generate solver input files, launch TetGen, execute the solver, and inspect results.
+
+## Minimal Python example
 
 ```python
 from pathlib import Path
@@ -49,9 +74,9 @@ run_solver(paths, survey)
 ## Linking to other docs
 
 - See :ref:`workflow` for the high-level repository and data flow.
-- See :ref:`python_interface` for the Python package API and import conventions.
+- See :ref:`python_interface` for the Python I/O wrapper usage and supported import conventions.
 
-## Notes on the Python reference
+## Notes on the Python wrapper
 
-The Python I/O layer is described in a curated reference page in `python_interface.md`.
-This page is focused on the minimal user workflow, while `python_interface.md` is focused on the package API and supported import names.
+The Python I/O wrapper is described in `python_interface.md`.
+This page is focused on the minimal user workflow, while `python_interface.md` is focused on the supported package namespace and interface patterns.

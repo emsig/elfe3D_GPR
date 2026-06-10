@@ -1,6 +1,6 @@
-﻿# Python Interface {#python_interface}
+﻿# Python I/O Wrapper {#python_interface}
 
-The Python interface is the primary user-facing entry point for notebooks and scripted workflows.
+The Python I/O wrapper is the primary user-facing entry point for notebooks and scripted workflows.
 
 ## Main user modules
 
@@ -13,7 +13,7 @@ The Python interface is the primary user-facing entry point for notebooks and sc
   - `IOConfig` — manages input and output folder locations
   - `GPRSurvey` — overall survey definition and builder
 
-## How to use the interface
+## How to use the wrapper
 
 Install the package in editable mode from the repository root:
 
@@ -21,7 +21,7 @@ Install the package in editable mode from the repository root:
 pip install -e .
 ```
 
-Then import from the package namespace:
+Then import from the supported package namespace:
 
 ```python
 from elfe3d_gpr.runner import ProjectPaths, run_tetgen, run_solver
@@ -64,12 +64,12 @@ run_tetgen(paths, survey.io.poly_file)
 run_solver(paths, survey)
 ```
 
-The first example notebook, `examples/01_wholespace_air.ipynb`, shows the recommended package-based workflow.
-Legacy imports from `io` continue to work when the repository root is on `PYTHONPATH`, but the supported package namespace is `elfe3d_gpr`.
+The first example notebook, `examples/01_homogeneous_free-space.ipynb`, shows the recommended package-based workflow.
+Legacy imports from `io` may still work when the repository root is on `PYTHONPATH`, but the supported package namespace is `elfe3d_gpr`.
 
 ## Notes on page structure
 
-This page focuses on Python package usage and API imports.
+This page focuses on the Python I/O wrapper usage and import conventions.
 The `workflow` page explains the repository architecture and the end-to-end process from model definition to solver execution.
 Keeping them separate is helpful because readers who want code examples can go directly to `python_interface.md`, while readers who want the overall process can read `workflow.md`.
 

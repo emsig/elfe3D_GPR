@@ -23,3 +23,24 @@ myst_enable_extensions = [
     'deflist',
     'colon_fence',
 ]
+
+import subprocess
+from pathlib import Path
+
+
+def run_doxygen():
+    repo_root = Path(__file__).resolve().parents[2]
+    doxyfile = repo_root / 'Doxyfile'
+    if not doxyfile.exists():
+        print('Doxygen config not found at', doxyfile)
+        return
+    try:
+        subprocess.run(['doxygen', str(doxyfile)], cwd=str(repo_root), check=True)
+    except FileNotFoundError:
+        print('Doxygen executable not found; skipping Fortran docs generation.')
+    except subprocess.CalledProcessError:
+        print('Doxygen failed; Fortran docs may be outdated.')
+
+
+def setup(app):
+    run_doxygen()
