@@ -23,7 +23,7 @@ _Getting started:_
 
 You find the `elfe3D` source code in `elfe3D/elfe3D/` and the manual including instalation instructions in `elfe3D/elfe3D/README.md`.
 `elfe3D` can be compiled with the provided Makefile.
-Note that, the open source mesh generator `tetgen` and the direct solver `MUMPS` must be installed additionally.
+Note that, the open source mesh generator `tetgen` and the direct solver `MUMPS` must be installed additionally. Be aware that some `tetgen` versions are not working properly. The test example in `elfe3D/elfe3D/in` can be used if your tetgen version is working (`tetgen 1.6` might cause problems). Its should run without warnings, PLC errors or intersections. Chech that your mesh is a closed 3D-cube by visualising it, e.g. with `ParaView`.
 
 _Tests:_
 
