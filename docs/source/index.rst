@@ -18,8 +18,6 @@ It is structured as follows:
    :maxdepth: 1
    :caption: User Guide
 
-   workflow
-   python_interface
    inputs_and_models
    outputs
    examples
@@ -35,8 +33,7 @@ It is structured as follows:
 .. toctree::
    :maxdepth: 1
    :caption: Advanced Users
-
-   developer_guide
+   
    api_python
    api_fortran
 

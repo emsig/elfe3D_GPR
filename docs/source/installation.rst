@@ -3,7 +3,7 @@
 
 This page describes the core installation and build steps for ``elfe3D_GPR``.
 
-System prerequisites
+System Prerequisites
 --------------------
 
 - a modern Fortran compiler (Fortran 2008 or later compiler for ``.f90`` sources; tested on ``gfortran``).
@@ -12,6 +12,17 @@ System prerequisites
 - ``TetGen`` for mesh generation.
 - ``MUMPS`` for the direct linear algebra solver.
 - ``Python 3.10+`` for the Python I/O wrapper and docs build.
+
+Platforms
+---------
+
+So far, ``elfe3D_GPR`` is only available for Linux. Windows users can use a `Windows Subsystem for Linux (WSL) <https://learn.microsoft.com/en-us/windows/wsl/install>`_ to 
+run ``elfe3D_GPR`` simulations (this has also been tested).
+
+.. note::
+   
+   In fact, the Python I/O module allows users to run the Fortran executables of ``tetgen`` and ``elfe3D_GPR`` 
+   directly from a jupyter notebook on both, a native-Linux install and a Windows-WSL install.
 
 Build the Fortran solver
 ------------------------
@@ -56,6 +67,9 @@ Copy the required header files into the Fortran source directory:
    cp MUMPS/include/zmumps_struc.h elfe3D_GPR/.
 
 
+Make ``elfe3D_GPR``
+^^^^^^^^^^^^^^^^^^^
+
 Update the ``MUMPS_LIB_DIR`` variable in ``elfe3D_GPR/Makefile`` to point to your installed MUMPS library directory:
 
 .. code-block:: make
@@ -87,17 +101,21 @@ Once the ``make`` process succeeds, you can simply:
 
 .. note::
    You can run the Fortran simulation independent of the Python I/O module. 
-   Right after the make process, if you run ``./elfe3d_gpr``, it will solve for the homogeneous air model 
+   Right after the ``make`` process, if you run ``./elfe3d_gpr``, it will solve for the homogeneous air model 
    (the simplest reference example) as the input files have been made available on release.
 
    You can verify the results of this simulation by referring against the plots in the example notebook 
    ``examples/01_homogeneous_free-space.ipynb``.
 
+   If you are not interested in using the Python I/O module, you can continue directly at :doc:`quickstart` 
+   where we explain the input files that ``elfe3D_GPR`` uses to define a GPR simulation, and the subsequent output files.
 
-Verify Python setup
--------------------
 
-If you would like to use the Python I/O module, start with checking the active Python environment and package tools:
+Install the Python I/O Module
+-----------------------------
+
+If you would like to use the Python I/O module, you can continue with checking 
+the active Python environment and package tools:
 
 .. code-block:: bash
 
@@ -106,15 +124,12 @@ If you would like to use the Python I/O module, start with checking the active P
    python -m pip install --upgrade pip setuptools wheel
 
 
-Install the Python I/O module
------------------------------
-
 The Python I/O module is implemented in the ``io/`` folder and packaged under the namespace ``elfe3d_gpr_io``.
 Install it from the repository root:
 
 .. code-block:: bash
 
-   cd .. #to go up one directory from elfe3D_GPR into the repository root
+   cd .. #to go up one directory from elfe3D_GPR into the repository root, might not be necessary depending on your current directory location.
    pip install -e .
 
 
@@ -125,5 +140,7 @@ The supported import namespace is used as:
    from elfe3d_gpr_io.runner import ProjectPaths, run_tetgen, run_solver
    from elfe3d_gpr_io.inputs.survey import GPRSurvey
 
-You should now be ready to run your first simulation using ``elfe3D_GPR``! You can 
+You should now be ready to run your first simulation using ``elfe3D_GPR`` and its accompanying Python module! You can 
 read more from the :doc:`quickstart` guide, or head to ``examples/01_homogeneous_free-space.ipynb`` directly. 
+The first notebook has detailed comments along with a complete workflow through your first ``elfe3D_GPR`` 
+simulation using the Python module, including visualizing simulation results.

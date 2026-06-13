@@ -1,92 +1,96 @@
 ﻿Quick Start
 ===========
 
-This page describes two minimal ways to start using `elfe3D_GPR`.
+This page describes the two ways to start using ``elfe3D_GPR``.
 
-Option A: native Fortran run
-----------------------------
+.. _fortran_quick:
 
-The simplest path is to run the compiled Fortran solver directly with the example input files provided in the repository.
-This is the default `elfe3D`-style workflow and is useful for validating the solver executable before using the Python wrapper.
+Option A: Fortran-only Approach
+-------------------------------
 
-Steps:
+After following the Fortran installation instructions in :doc:`installation`, 
+you can run your own ``elfe3D_GPR`` simulation directly. These few steps 
+highlight a brief glance of what the core workflow is:
 
-1. Build the Fortran solver in `elfe3D_GPR/`.
-2. Change to the `elfe3D_GPR/` directory.
-3. Run the solver executable, for example:
+1. Going to the ``elfe3D_GPR/`` directory (the directory with the executable).
+2. Creating/reviewing input files for the solver within the ``elfe3D_GPR\in`` folder (more on input files in :doc:`inputs_and_models`).
+3. Run ``tetgen`` on the ``.poly`` file with preferred quality settings. This step creates the necessary unstructured finite element mesh files that ``elfe3D_GPR`` needs to solve the wave equation using the finite element method. It also includes a ``.vtk`` file that can be used for visualizing the mesh including the PML.
+4. Run the ``elfe3D_GPR`` solver executable using the command:
 
 .. code-block:: bash
 
-   cd elfe3D_GPR
    ./elfe3d_gpr
 
+Once the simulation completes, you will have outputs in two directories:
+1.  ``elfe3D_GPR\out_{name_of_experiment}`` with text files that record electric and magnetic field components per input frequency and receiver coordinates.
+2.  ``elfe3D_GPR\in`` has an updated ``.vtk`` file with electric and magnetic field distributions in the entire volume. 
 
-4. Inspect the output in the matching `out_*` folder.
+.. warning::
 
-Option B: notebook workflow with the Python I/O wrapper
--------------------------------------------------------
-
-The recommended workflow for new work is to use the Python I/O wrapper and the example notebook in `examples/01_homogeneous_free-space.ipynb`.
-This approach uses the installed package namespace `elfe3d_gpr_io` and demonstrates the full model build → TetGen → solver → output cycle.
-
-1. Install or activate your Python environment from the repository root.
-2. Install the Python wrapper:
-
-.. code-block:: bash
-
-   pip install -e .
+   This `.vtk` file currently only stores field data for the first frequency of simulation. 
+   This is to prevent the ``.vtk`` files from growing too large. 
+   A feature to allow writing fields for all frequencies of simulation would be provided in a future version.
 
 
-3. Open `examples/01_homogeneous_free-space.ipynb` in JupyterLab or Jupyter Notebook.
-4. Run the notebook to generate solver input files, launch TetGen, execute the solver, and inspect results.
+Option B: Python I/O Module-Assisted Approach
+---------------------------------------------
+
+The easier approach is to use the Python I/O module ``elfe3d_gpr_io``. 
+The example notebook in `examples/01_homogeneous_free-space.ipynb` 
+gives a good starting overview of the complete simulation workflow, going from input definitions, path configurations, 
+running the Fortran executable from the notebook, and visualization of outputs.
 
 Minimal Python example
-----------------------
+^^^^^^^^^^^^^^^^^^^^^^
+
+Otherwise, after following installation instructions for ``elfe3d_gpr_io``, you can simply 
+run the following minimal python script:
 
 .. code-block:: python
 
    from pathlib import Path
    from elfe3d_gpr_io.runner import ProjectPaths, run_tetgen, run_solver
    from elfe3d_gpr_io.inputs.survey import GPRSurvey
-   
-   master_dir = Path('..') / 'elfe3D_GPR'
-   master_dir = master_dir.resolve()
-   
+
+   MASTER_PATH = (Path("..") / "elfe3D_GPR").resolve() # Base path variable, optional
+
    paths = ProjectPaths(
-       master_dir=master_dir,
-       exec_rel='elfe3d_gpr',
-       use_wsl=True,
+      master_dir = MASTER_PATH,   # Path where the elfe3D_GPR executable is located. Currently it is the same as repository root.
+      exec_rel   = "",            # Relative path to find the executable. With the default installation it exists in the repository root, hence an empty string.
+      use_wsl    = False,         # True if running the notebook from Windows with WSL installed.
    )
+
+   # Defining elfe3D_GPR simulation inputs
+   f     = 100e6     # frequency of simulation in Hertz
+   wave  = 3e8 / f   # approximate length unit useful only to define simulation domain
    
    survey = GPRSurvey.build(
-       experiment_name='air_only',
-       base_dir=master_dir,
-       air_eps_r=1.0,
-       air_sigma=1e-16,
-       layer_thicknesses=[0.3],
-       layer_eps_r=[1.0],
-       layer_sigma=[1e-16],
-       layer_mu_r=[1.0],
-       layer_sigma_m=[0.0],
-       # Note: prefer explicit frequency lists. Legacy `ricker_central_f` is deprecated.
-       f_list=[100e6],
-       antenna_position=[0.0, 0.0, 0.025],
-       num_receivers_inline=5,
+      experiment_name='air_only', # Name of the experiment, will also be used to create file and folder names for I/O.
+      base_dir=MASTER_PATH,
+
+      # Domain extents [in meters], along x and y (lateral) axes, and z (height) axis.
+      x_e = [-wave/10, 1 + wave/10],  
+      y_e = [-wave/10,     wave/10],
+      z_e = [-wave/10,     wave/10],
+
+      # Simple Homogeneous Medium Simulation: Air-only
+      layer_thicknesses=[0.3],
+      layer_eps_r=[1.0],
+      layer_sigma=[1e-16],
+      layer_mu_r=[1.0],
+      layer_sigma_m=[0.0],
+
+      # list of frequencies of simulation
+      f_list=[100e6],                     # list of frequency
+      antenna_position=[0.0, 0.0, 0.025], # [x, y, z], 25 mm above the surface.
+      num_receivers_inline=5,             # distributes receivers automatically along a radial line from the source to the end of domain
    )
    
-   survey.generate()
-   run_tetgen(paths, survey.io.poly_file)
-   run_solver(paths, survey)
+   survey.generate() # Creates the input files needed by the Fortran core solver.
+
+   run_tetgen(paths, survey.io.poly_file) # Runs the tetgen meshing algorithm right from the notebook/python script.
+   run_solver(paths, survey)              # As the input and mesh files are now generated, the Fortran solver is now called to run the simulation.
 
 
-Linking to other docs
----------------------
-
-- See :ref:`workflow` for the high-level repository and data flow.
-- See :ref:`python_interface` for the Python I/O wrapper usage and supported import conventions.
-
-Notes on the Python wrapper
----------------------------
-
-The Python I/O wrapper is described in `python_interface`.
-This page is focused on the minimal user workflow, while `python_interface` is focused on the supported package namespace and interface patterns.
+Running this script will result in the same outputs as the Fortran option described in the section above :ref:`fortran_quick`. 
+You can now proceed with more detailed analysis with the generated outputs using the tools described in :doc:`python_module`.

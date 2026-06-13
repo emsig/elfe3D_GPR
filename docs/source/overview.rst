@@ -36,8 +36,8 @@ Academic Supervisors
 Contact
 ^^^^^^^
 
-If you would like to discuss the theoretical background of ``elfe3D_GPR``, suggest changes to the code or highlight issues, you are 
-welcome to contact Chaitanya at his email (chaitanya.singh@northumbria.ac.uk).
+If you would like to discuss the theoretical background of ``elfe3D_GPR``, suggest changes to the software, or would like to contribute, 
+you are welcome to contact Chaitanya at his email: chaitanya.singh@northumbria.ac.uk.
 
 Citation
 --------
