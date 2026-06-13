@@ -1,8 +1,10 @@
-﻿# Developer Guide
+﻿Developer Guide
+===============
 
 This page describes the repository structure and the development workflow for `elfe3D_GPR`.
 
-## Repository structure
+Repository structure
+--------------------
 
 - `elfe3D_GPR/` — Fortran source tree and solver executable
 - `io/` — Python model builders, input writers, execution helpers, and output readers
@@ -10,7 +12,8 @@ This page describes the repository structure and the development workflow for `e
 - `tests/` — test harnesses and validation utilities
 - `validation/` — reference datasets and validation scripts
 
-## Building the project
+Building the project
+--------------------
 
 The core procedure is:
 
@@ -19,19 +22,22 @@ The core procedure is:
 3. run TetGen on the generated `.poly` file
 4. execute the solver
 
-## Documentation development
+Documentation development
+-------------------------
 
 The docs live in `docs/source/` and are built with Sphinx.
 The content includes user-facing guides, notebook workflows, and a scientific theory page.
 
-## Future work
+Future work
+-----------
 
-- package the Python I/O layer as an installable module under the namespace `elfe3d_gpr`
+- package the Python I/O layer as an installable module under the namespace `elfe3d_gpr_io`
 - integrate Doxygen output into RTD as an external reference for the Fortran API
 - add automated Python API reference once the package layout is stable
 - expand the example notebook documentation when the example workflows are finalized
 
-## Fortran API documentation
+Fortran API documentation
+-------------------------
 
 The Fortran solver API is intended to be exposed through external Doxygen-generated HTML.
 This documentation will be referenced from the RTD site using a direct external link such as :doxygen:`index.html`, instead of a local RTD page.
