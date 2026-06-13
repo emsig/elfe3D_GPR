@@ -31,7 +31,8 @@ Otherwise, on Debian/Ubuntu, you can:
    sudo apt install tetgen
 
 
-### Install MUMPS
+Install MUMPS
+^^^^^^^^^^^^^
 
 ``MUMPS`` is available at <https://mumps-solver.org>.
 Build it from source and copy the required headers into the ``elfe3D_GPR/`` source tree.
@@ -77,22 +78,26 @@ Set the OpenMP thread count to avoid oversubscription:
    export OMP_NUM_THREADS=<number_of_threads>
 
 
-You can run the Fortran solver independent of the Python I/O module. Once the ``make`` process 
-succeeds, you can simply:
+Once the ``make`` process succeeds, you can simply:
 
 .. code-block:: bash
 
-   ./elfe3d
+   ./elfe3d_gpr
 
 
-Currently, it will solve for the homogeneous air model (the simplest reference example) as the input 
-files have been made available on release for verification of the fortran installation.
+.. note::
+   You can run the Fortran simulation independent of the Python I/O module. 
+   Right after the make process, if you run ``./elfe3d_gpr``, it will solve for the homogeneous air model 
+   (the simplest reference example) as the input files have been made available on release.
+
+   You can verify the results of this simulation by referring against the plots in the example notebook 
+   ``examples/01_homogeneous_free-space.ipynb``.
 
 
 Verify Python setup
 -------------------
 
-Check the active Python environment and package tools:
+If you would like to use the Python I/O module, start with checking the active Python environment and package tools:
 
 .. code-block:: bash
 
@@ -104,7 +109,7 @@ Check the active Python environment and package tools:
 Install the Python I/O module
 -----------------------------
 
-The Python I/O module is implemented in the `io/` folder and packaged under the namespace `elfe3d_gpr_io`.
+The Python I/O module is implemented in the ``io/`` folder and packaged under the namespace ``elfe3d_gpr_io``.
 Install it from the repository root:
 
 .. code-block:: bash
@@ -120,3 +125,5 @@ The supported import namespace is used as:
    from elfe3d_gpr_io.runner import ProjectPaths, run_tetgen, run_solver
    from elfe3d_gpr_io.inputs.survey import GPRSurvey
 
+You should now be ready to run your first simulation using ``elfe3D_GPR``! You can 
+read more from the :doc:`quickstart` guide, or head to ``examples/01_homogeneous_free-space.ipynb`` directly. 
