@@ -40,4 +40,4 @@ Fortran API documentation
 -------------------------
 
 The Fortran solver API is intended to be exposed through external Doxygen-generated HTML.
-This documentation will be referenced from the RTD site using a direct external link such as :doxygen:`index.html`, instead of a local RTD page.
+This documentation will be referenced from the RTD site using a direct external link such as `Doxygen HTML <https://your-site.example.com/doxygen/index.html>`_, instead of a local RTD page.

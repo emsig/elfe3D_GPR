@@ -1,38 +1,63 @@
 Overview
 ========
 
-`elfe3D_GPR` is a 3D finite-element forward modelling framework for ground penetrating radar (GPR) simulations.
+``elfe3D_GPR`` is a 3D edge-based **Finite Element** (FE) software for **Ground Penetrating Radar** (GPR) geophysical heterogeneous models in the frequency-domain. 
+Unlike time-domain simulation codes, ``elfe3D_GPR`` produces field distributions directly in the frequency-domain based on the input frequencies of interest.
 
-It builds on the earlier `elfe3D` simulation code developed by Paula Rulff. To `elfe3D`, the boundary value problem was extended to include displacement currents. Then, a Perfectly Matched Layer (PML) was added to absorb outgoing waves. Finally, a Python I/O wrapper was added for rapid and intuitive input model generation and output processing.
+Origin
+------
 
-What this project provides
---------------------------
+``elfe3D_GPR`` builds on the ``elfe3D`` software developed by Paula Rulff [ELFE3D]_, [RUL2023]_, [RUL2021]_ that simulates diffusive-field problems in Controlled-Source Electromagnetism. 
+Both ``elfe3D`` and ``elfe3D_GPR`` are programmed in Fortran 90, that use ``tetgen`` [TETGEN]_, [SI2009]_ for producing unstructured tetrahedral mesh, and ``MUMPS`` [MUMPS]_ for solving the FE system of linear equations.
 
-- A Fortran-based core solver for the 3D total electric field forward problem
-- Input file generation for structured surveys, layers, and anomalies
-- TetGen based tetrahedral unstructured mesh generation
-- A Python I/O wrapper for simplifying model setup and execution
-- Example notebooks that guide users through representative GPR workflows
-- RTD-ready documentation for installation, usage, and theory
+The major changes between ``elfe3D`` and ``elfe3D_GPR`` are as follows:
 
-Key references
---------------
+- The boundary value problem ``elfe3D`` solves is approximated for low-frequency diffusive fields. ``elfe3D_GPR`` now extends it to the full wave equation of electromagnetism. 
+- A **Perfectly Matched Layer (PML)** is added to absorb outgoing waves from the truncated computational model domain. Specifically, it is a Uniaxial-PML that attenuates outgoing waves with an exact decay function [DIN2025]_, [FEN2019]_. 
 
-- The original `elfe3D` solver and manual provide the foundation for the numerical and software design.
-- This documentation is inspired by the more modern RTD structure found in projects such as MFEM and empymod.
-- For scientific background and theoretical support, see: *[Thesis reference placeholder]*.
+These two major changes have been rigorously developed and described in the master's thesis written by Chaitanya Singh, and supervised by Paula Rulff and Evert Slob [SIN2025]_.
 
-How to use this documentation
------------------------------
+Since the thesis, ``elfe3D_GPR`` now also includes a Python I/O module for rapid and intuitive input model generation and output processing. You can read more here :doc:`inputs_and_models`.
 
-1. Read `installation` to set up the environment and build the solver.
-2. Follow `quickstart` for either the native Fortran run or the notebook-based workflow.
-3. Use `workflow` to understand how the repository pieces fit together.
-4. Use `python_interface` to learn the supported Python I/O wrapper imports.
-5. Refer to `inputs_and_models` and `outputs` for model definitions and file formats.
-6. Run the example notebooks in `examples` to verify the end-to-end workflow.
-
-Contact
+Authors
 -------
 
-For questions or support, contact p.rulff@tudelft.nl.
+**Chaitanya Dinesh Singh**
+
+- Implemented changes between ``elfe3D`` and ``elfe3D_GPR``.
+- Email: chaitanya.singh@northumbria.ac.uk
+
+Academic Supervisors
+^^^^^^^^^^^^^^^^^^^^
+
+- **Paula Rulff**: Author of ``elfe3D``.
+- **Evert Slob** : Supervisor, author of MATLAB scripts for semi-analytical validation.
+
+Contact
+^^^^^^^
+
+If you would like to discuss the theoretical background of ``elfe3D_GPR``, suggest changes to the code or highlight issues, you are 
+welcome to contact Chaitanya at his email (chaitanya.singh@northumbria.ac.uk).
+
+Citation
+--------
+
+If you publish results generated with ``elfe3D_GPR``, please give credit to the ``elfe3D_GPR`` developers 
+by citing the thesis [SIN2025]_. 
+
+Do not forget to acknowledge ``MUMPS`` [MUMPS]_ and ``tetgen`` [TETGEN]_ developers as well.
+
+License
+-------
+
+``elfe3D_GPR`` is licensed under the Apache License, Version 2.0 (the 
+\"License\"); you may not use any ``elfe3D_GPR`` files except in compliance 
+with the License. You may obtain a copy of the License at:
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software 
+distributed under the License is distributed on an "AS IS" BASIS, 
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+See the License for the specific language governing permissions and 
+limitations under the License.
