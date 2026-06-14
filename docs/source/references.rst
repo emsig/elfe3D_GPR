@@ -20,6 +20,8 @@ Key Literature
 
 .. [JIN2015] Jin, J.-M. (2015). The finite element method in electromagnetics. John Wiley & Sons.
 
+.. [GRI2023] Griffiths, D. J. (2023). Introduction to electrodynamics. Cambridge University Press.
+
 .. [BER2004] Bermúdez, A., Hervella-Nieto, L., Prieto, A., and Rodríguez, R. (2004). An exact bounded PML for the Helmholtz equation. Comptes Rendus Mathematique, 339(11), 803–808.
 
 .. [OZG2023] Ozgun, O., Kuzuoglu, M., and Mittra, R. (2023). Self-tuning locally conformal pml mesh truncation for 3-d vector finite element method. IEEE Transactions on Antennas and Propagation, 72(2), 2036–2040.

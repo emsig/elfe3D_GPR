@@ -1,5 +1,5 @@
-﻿elfe3D_GPR Theory
-=================
+﻿elfe3D_GPR Theory and Computational Framework
+=============================================
 
 .. note::
 
@@ -17,7 +17,8 @@ Physics of Electromagnetic Waves for GPR
 ----------------------------------------
 
 ``elfe3D_GPR`` solves the full Maxwell's equations for wave-regime electromagnetism. This enables it to 
-solve GPR problems in heterogeneous subsurface models.
+solve GPR problems in heterogeneous subsurface models. Refer to [GRI2023]_ and optionally [JIN2015]_ 
+for complete treatment of the wave-electromagnetism problem.
 
 First-Order Edge-Based Finite Elements
 --------------------------------------
