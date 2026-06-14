@@ -70,10 +70,11 @@ Copy the required header files into the Fortran source directory:
 Make ``elfe3D_GPR``
 ^^^^^^^^^^^^^^^^^^^
 
-Update the ``MUMPS_LIB_DIR`` variable in ``elfe3D_GPR/Makefile`` to point to your installed MUMPS library directory:
+Update the ``MUMPS_LIB_DIR`` and ``FCC`` variables in ``elfe3D_GPR/Makefile`` to point to your installed MUMPS library directory and the Fortran compiler:
 
 .. code-block:: make
 
+   FCC = <example_fortran_compiler_like_gfortran>
    MUMPS_LIB_DIR = /path/to/your/MUMPS_5.7.3/lib
 
 
