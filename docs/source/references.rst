@@ -30,8 +30,6 @@ Key Literature
 
 .. [PLE2022] Pled, F., and Desceliers, C. (2022). Review and recent developments on the perfectly matched layer (pml) method for the numerical modeling and simulation of elastic wave propagation in unbounded domains. Archives of Computational Methods in Engineering, 29(1), 471–518.
 
-.. [LEV2000] Levy, M. (2000). Parabolic equation methods for electromagnetic wave propagation (No. 45). IET.
-
 .. [SI2009] Si, H., & TetGen, A. (2009). A quality tetrahedral mesh generator and a 3d delaunay triangulator. Cited on, 61.
 
 .. [AME2000] Amestoy, P. R., Duff, I. S., L'Excellent, J. Y., & Koster, J. (2000, June). MUMPS: a general purpose distributed memory sparse solver. In International Workshop on Applied Parallel Computing (pp. 121-130). Berlin, Heidelberg: Springer Berlin Heidelberg.

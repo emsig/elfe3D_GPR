@@ -8,7 +8,7 @@ Origin
 ------
 
 ``elfe3D_GPR`` builds on the ``elfe3D`` software developed by Paula Rulff [ELFE3D]_, [RUL2023]_, [RUL2021]_ that simulates diffusive-field problems in Controlled-Source Electromagnetism. 
-Both ``elfe3D`` and ``elfe3D_GPR`` are programmed in Fortran 90, that use ``tetgen`` [TETGEN]_, [SI2009]_ for producing unstructured tetrahedral mesh, and ``MUMPS`` [MUMPS]_ for solving the FE system of linear equations.
+Both ``elfe3D`` and ``elfe3D_GPR`` are programmed in Fortran 90, that use ``tetgen`` [TETGEN]_, [SI2009]_ for producing unstructured tetrahedral mesh, and ``MUMPS`` [MUMPS]_, [AME2000]_ for solving the FE system of linear equations.
 
 The major changes between ``elfe3D`` and ``elfe3D_GPR`` are as follows:
 
