@@ -92,17 +92,17 @@ Set the OpenMP thread count to avoid oversubscription:
    export OMP_NUM_THREADS=<number_of_threads>
 
 
-Once the ``make`` process succeeds, you can simply:
+Once the ``make`` process succeeds, you can simply run the solver from the folder containing your input files:
 
 .. code-block:: bash
 
-   ./elfe3d_gpr
+   cd in_<experiment_name>
+   ../elfe3d_gpr
 
 
 .. note::
    You can run the Fortran simulation independent of the Python I/O module. 
-   Right after the ``make`` process, if you run ``./elfe3d_gpr``, it will solve for the homogeneous air model 
-   (the simplest reference example) as the input files have been made available on release.
+   Right after the ``make`` process, if you run ``./elfe3d_gpr`` from a directory containing ``elfe3D_input.txt``, it will solve the homogeneous air model or whichever case is described by the provided input files.
 
    You can verify the results of this simulation by referring against the plots in the example notebook 
    ``examples/01_homogeneous_free-space.ipynb``.

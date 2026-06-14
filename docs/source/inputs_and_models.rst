@@ -10,6 +10,11 @@ Input Files for ``elfe3D_GPR``
 
 ``elfe3D_GPR`` requires a few input files in the simulation input directory.
 The ``examples/in`` example folder provides a current reference for these files.
+When using the Python I/O wrapper, the input files are written into an
+experiment-specific directory such as ``in_<experiment_name>``, and the
+corresponding solver outputs are written into ``out_<experiment_name>``.
+The Fortran executable itself reads input files from the current working
+directory.
 
 ``elfe3D_input.txt``
 ~~~~~~~~~~~~~~~~~~~~

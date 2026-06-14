@@ -388,16 +388,18 @@ program elfe3d_gpr
   open (unit = (50+4), file = trim(HFile)//"_receiver_line.txt") 
 
   !> \note New in elfe3D_GPR
-  call Write_Message (log_unit, &
-     'Your output files will be generated in: /out')
+  call Write_Message (log_unit, 'Your working directory (input folder) is:')
+  call execute_command_line ('pwd', exitstat=i)
+  call Write_Message (log_unit, 'Your output files will be generated relative to the current working directory:')
+  call Write_Message (log_unit, '  electric fields: '//trim(EFile)//'.txt')
+  call Write_Message (log_unit, '  magnetic fields: '//trim(HFile)//'.txt')
   if (fields_vtk == 1) then
-    call Write_Message (log_unit, &
-     'Field components in the domain will be in *.vtk file in: /in')
+    call Write_Message (log_unit, 'Field components in the domain will be written relative to the current working directory')
   end if
 
   if (vtk == 1) then
     ! Refinement-info 
-    open(unit=9999, file = 'out/elfe3D_refinement_Info.txt') 
+    open(unit=9999, file = 'elfe3D_refinement_Info.txt') 
   end if
   
   !---------------------------------------------------------------------
