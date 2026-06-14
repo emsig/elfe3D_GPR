@@ -5,11 +5,11 @@
 #   MUMPS_LIB_DIR=<path>        - Path to MUMPS library (relative or absolute)
 
 # Compiler - allow override: make FCC=gfortran or FCC=gfortran-10
-FCC ?= gfortran-10
+FCC ?= 
 
 # Path configuration - use environment variable or default to relative path
 # Example: MUMPS_LIB_DIR=../path/to/lib make
-MUMPS_LIB_DIR ?= ../../Setup_Aid/elfe3D/Dependencies/MUMPS_5.7.3/lib
+MUMPS_LIB_DIR ?= 
 
 # System information (for reference)
 OS = $(shell uname)

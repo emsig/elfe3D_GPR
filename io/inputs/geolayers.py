@@ -3,8 +3,8 @@ geolayers.py
 ------------
 Geological layer definitions and the layer stack that manages them.
 
-GeoLayer  — a single horizontal layer with thickness and material.
-LayerStack — ordered collection (air + earth layers), computes z-interfaces.
+GeoLayer    : a single horizontal layer with thickness and material.
+LayerStack  : ordered collection (air + earth layers), computes z-interfaces.
 
 The z-interface computation is based on the following logic:
     z[0] = 0.0  (air-earth surface)

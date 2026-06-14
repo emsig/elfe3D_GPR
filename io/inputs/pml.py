@@ -18,14 +18,14 @@ from enum import IntEnum
 
 class PMLType(IntEnum):
     """Spatial distribution of PML layers."""
-    LINEAR      = 0   # "lin" — uniform thickness per layer
-    LOGARITHMIC = 1   # "log" — single thick slab
+    LINEAR      = 0   # "lin": uniform thickness per layer
+    LOGARITHMIC = 1   # "log": single thick slab
 
 
 class PMLTheory(IntEnum):
     """PML formulation used in the FEM."""
-    ANISOTROPIC          = 0
-    DIFFERENTIAL_OPERATOR = 1
+    ANISOTROPIC             = 0
+    DIFFERENTIAL_OPERATOR   = 1
 
 
 @dataclass
@@ -37,7 +37,7 @@ class PMLConfig:
     ----------
     num_layers      : number of PML shells (each adds one prism-width outward)
     layer_thickness : thickness of one PML shell [m]
-    pml_type        : "lin" or "log" — spatial layout of shells
+    pml_type        : "lin" or "log": spatial layout of shells
     pml_theory      : 0=anisotropic, 1=differential operator formulation
     pml_decay_type  : conductivity profile (passed to SolverConfig too)
                       1=simple reciprocal, 2=log, 3=exp, 4=polynomial

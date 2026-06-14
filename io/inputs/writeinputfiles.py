@@ -43,8 +43,8 @@ class FEMInputWriter:
     receivers : ReceiverArray
     solver    : SolverConfig
     pml       : PMLConfig
-    output_dir : Path — all files written here
-    io_config  : dict — file name overrides (optional, see defaults below)
+    output_dir : Path: all files written here
+    io_config  : dict: file name overrides (optional, see defaults below)
 
     Default filenames
     -----------------
@@ -92,9 +92,6 @@ class FEMInputWriter:
         self.source_file        = self.output_dir / cfg.get("source_file",        self._DEFAULTS["source_file"])
         self.region_params_file = self.output_dir / cfg.get("region_params_file", self._DEFAULTS["region_params_file"])
 
-    # ------------------------------------------------------------------
-    # Public API
-    # ------------------------------------------------------------------
 
     def write_all(self, regions: list) -> None:
         """

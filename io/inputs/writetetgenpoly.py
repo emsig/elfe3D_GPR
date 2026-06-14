@@ -6,19 +6,9 @@ Assembles and writes the TetGen .poly input file.
 PolyAssembler takes all domain objects (layers, source, receivers, anomalies,
 PML) and runs the three assembly passes — nodes, regions, facets — then
 writes the .poly file.
-
-Anomaly handling supports a heterogeneous list of BoxAnomaly and/or
-SphereAnomaly objects.  Both share the same material interface; geometry
-differs only in the node/facet passes:
-  BoxAnomaly    → 8 corner nodes from create_rectangular_prism_nodes,
-                  6 quad facets from create_cuboid_faces_from_nodes
-  SphereAnomaly → icosphere vertex nodes (already in world space),
-                  triangular facets from the .faces index array
 """
 
-import os
 import numpy as np
-from itertools import groupby
 from pathlib import Path
 
 from .tetgenprimitives import (
@@ -149,7 +139,7 @@ class PolyAssembler:
         self._anomaly_data: list[tuple] = []
 
     # ==========================================================================
-    # Public API
+    # Evaluate and write all input files
     # ==========================================================================
 
     def evaluate_all_input_data(self) -> None:
@@ -233,7 +223,7 @@ class PolyAssembler:
         if self.box_present:
             self.node_list_source_box = node_list_source_box
 
-        # ── Anomaly nodes ─────────────────────────────────────────────────────
+        # Anomaly nodes
         # Each anomaly gets a unique boundary marker starting at 101.
         # self._anomaly_data stores (anomaly_obj, node_list) pairs so that
         # evaluate_all_regions() and evaluate_all_facets() can iterate them
@@ -333,7 +323,7 @@ class PolyAssembler:
 
         z_layers = [self.layer_interfaces['z'][j] for j in range(self.num_layers)]
 
-        # ── Type 2: lateral edge intersections ────────────────────────────────
+        # Type 2: lateral edge intersections
         # Only generated when there are layer interfaces to intersect.
         # With num_layers=0, z_layers is empty so no type-2 nodes exist.
 
@@ -358,7 +348,7 @@ class PolyAssembler:
                     pml_type_2_layer_nodes.append(node)
                     pml_type_2_nodes.append(node)
 
-        # ── Type 3: corner cubes ───────────────────────────────────────────────
+        # Type 3: corner cubes
 
         vertex_configs = [
             (self.x_max, self.x_max + self.NUM_PML * t,  self.y_min, self.y_min - self.NUM_PML * t,  self.z_max, self.z_max + self.NUM_PML * t),  # Front-Right-Top
@@ -397,7 +387,7 @@ class PolyAssembler:
         self.num_regions = 0
         regions = []
 
-        # ── Earth layer regions ─────────────────────────────────────────────
+        # Earth layer regions
         for i in range(self.num_layers + 1):
             if self.num_layers == 0:
                 # Air only — single region occupies full domain depth
@@ -429,7 +419,7 @@ class PolyAssembler:
                 self.region_rho[i], self.region_mu_r[i], self.region_epsilon_r[i],
             ])
 
-        # ── Source box regions ──────────────────────────────────────────────
+        # Source box regions
         if self.box_present:
             if self.num_layers == 0:
                 region_height = 0.0 + float(self.region_volumes[0]) * 5
@@ -467,7 +457,7 @@ class PolyAssembler:
 
         self.regions = regions
 
-        # ── Anomaly regions ─────────────────────────────────────────────────
+        # Anomaly regions
         # One region seed per anomaly, placed at its centroid.
         for an_idx, (anomaly, _) in enumerate(self._anomaly_data):
             self.num_regions += 1
@@ -481,7 +471,7 @@ class PolyAssembler:
                 anomaly.rho, anomaly.mu_r, anomaly.eps_r,
             ])
 
-        # ── PML regions ─────────────────────────────────────────────────────
+        # PML regions
         if self.NUM_PML > 0:
             pml_regions = self._evaluate_all_regions_pml()
             self.regions += pml_regions
@@ -510,7 +500,7 @@ class PolyAssembler:
             for j in range(len(all_z) - 1)
         ]
 
-        # ── Type 1: face extensions ──────────────────────────────────────
+        # Type 1: face extensions
         self.marker_pml_1 = []
         for i in range(self.NUM_PML):
             faces = [
@@ -541,7 +531,7 @@ class PolyAssembler:
                             self.marker_pml_1[-1], None, r_label, None, None, None,
                         ])
 
-        # ── Type 2: edge extensions ──────────────────────────────────────
+        # Type 2: edge extensions
         self.marker_pml_2 = []
         edges = (
             [("Front-Right",  [self.x_max + i, self.y_min - j, 0.0]) for i, j in n_pairs] +
@@ -577,7 +567,7 @@ class PolyAssembler:
                     self.marker_pml_2[-1], None, r_label, None, None, None,
                 ])
 
-        # ── Type 3: corner extensions ────────────────────────────────────
+        # Type 3: corner extensions
         self.marker_pml_3 = []
         vertices = (
             [("Front-Right-Top",    [self.x_max + i, self.y_min - j, self.z_max + k]) for i, j, k in n_triplets] +
@@ -599,7 +589,7 @@ class PolyAssembler:
                 self.marker_pml_3[-1], None, r_label, None, None, None,
             ])
 
-        # ── Assign material properties by z-midpoint ─────────────────────
+        # Assign material properties by z-midpoint
         interfaces = self.layer_interfaces['z']
         num_layers = self.num_layers
 
@@ -626,7 +616,6 @@ class PolyAssembler:
             region[8] = self.region_mu_r[mat_idx]
             region[9] = self.region_epsilon_r[mat_idx]
 
-        print(self.layer_interfaces['z'])
         return PML_regions
 
     # ==========================================================================
@@ -646,21 +635,21 @@ class PolyAssembler:
         for node_list in self.node_list_of_list_of_interfaces:
             node_list_interfaces += node_list
 
-        # ── Domain outer faces (front/right/back/left/top/bottom) ────────
+        # Domain outer faces (front/right/back/left/top/bottom)
         self.domain_string = self._build_domain_face_strings(node_list_interfaces)
 
-        # ── Source box z=0 faces (if present) ────────────────────────────
+        # Source box z=0 faces (if present)
         if self.box_present:
             source_box_z0_string, source_box_1_faces, source_box_2_faces = (
                 self._build_source_box_faces()
             )
 
-        # ── Air-earth interface + receivers + source ──────────────────────
+        # Air-earth interface + receivers + source
         self._build_interface_and_receiver_strings(
             source_box_z0_string if self.box_present else ""
         )
 
-        # ── Remaining layer interfaces ────────────────────────────────────
+        # Remaining layer interfaces
         if self.num_layers > 0:
             self.num_facet += len(self.node_list_of_list_of_interfaces)
             marker_interfaces = [6, 7, 8, 9, 10]
@@ -685,7 +674,7 @@ class PolyAssembler:
         else:
             self.interfaces_string = ""
 
-        # ── Source box side faces ─────────────────────────────────────────
+        # Source box side faces
         if self.box_present:
             self.source_box_string = "# source box facets\n"
             for face in source_box_1_faces + source_box_2_faces:
@@ -693,9 +682,9 @@ class PolyAssembler:
                 self.source_box_string += "4 " + " ".join(map(str, [node[0] for node in face])) + "\n"
                 self.num_facet += 1
 
-        # ── Anomaly facets ────────────────────────────────────────────────
-        # BoxAnomaly  → 6 quad facets via create_cuboid_faces_from_nodes
-        # SphereAnomaly → one triangular facet per icosphere face
+        # Anomaly facets
+        # BoxAnomaly        : 6 quad facets via create_cuboid_faces_from_nodes
+        # SphereAnomaly     : one triangular facet per icosphere face
         self.anomaly_string = ""
         if self._anomaly_data:
             self.anomaly_string = "\n# anomaly facets\n"
@@ -723,7 +712,7 @@ class PolyAssembler:
                         self.anomaly_string += f"1 0 {marker}\n"
                         self.anomaly_string += f"3 {n1} {n2} {n3}\n"
 
-        # ── PML facets ────────────────────────────────────────────────────
+        #  PML facets
         if self.NUM_PML > 0:
             self._evaluate_all_facets_pml()
 
@@ -873,12 +862,6 @@ class PolyAssembler:
     def _evaluate_all_facets_pml(self) -> None:
         """
         Build TetGen .poly facet strings for PML Type-1, Type-2, and Type-3 shells.
-        """
-        # This method is intentionally long.
-        # See the original elfe3DGPRTestWritingPMLOAn.py evaluate_all_facets_PML()
-        # for the authoritative version. Refactoring of the internal PML facet
-        # loop structure can be done separately once the overall structure is stable.
-        """
         Function to evaluate all three types of facets for each PML layer.
         All these facets will be rectangular prisms.
         """
@@ -980,9 +963,7 @@ class PolyAssembler:
                     self.num_facet += 1
                     self.pml_string += create_face_string(marker, pml_type_1_faces_nodes_list[face][0], pml_type_1_interfaces_nodes_list[face][0], *face_sorting_settings[new_face])
                 
-        # __________________________________________________________
         # Create 12 cuboids at each edge of the domain - Type 2
-        # __________________________________________________________
         n = self.NUM_PML
         if n > 1:
             raise ValueError("The number of PML layers must be 1.")
@@ -1108,7 +1089,6 @@ class PolyAssembler:
         int_markers = [99-n-self.num_layers for n in range(self.num_layers*4)]
         
         for edge in range(len(all_edge_filters)):
-            # FRONT-RIGHT, BACK-RIGHT, BACK-LEFT, FRONT-LEFT, FRONT-TOP, RIGHT-TOP, BACK-TOP, LEFT-TOP, FRONT-BOTTOM, RIGHT-BOTTOM, BACK-BOTTOM, LEFT-BOTTOM
             if edge == 0:
                 edge_sorting_settings = front_right_sorting_settings
                 self.pml_string += f"\n# 6+l new faces with interface segments for the Front-Right edge\n"
@@ -1258,7 +1238,7 @@ class PolyAssembler:
     def _write_poly_file(self, path: Path) -> None:
         """Write the assembled .poly file."""
         with open(path, 'w') as f:
-            # Part 1 — Node list
+            # Part 1: Node list
             f.write("# Part 1 - Node List\n")
             f.write(f"{self.num_node} 3 0 1\n")
 
@@ -1313,7 +1293,7 @@ class PolyAssembler:
                     f.write(f"{node[0]} {_r(node[1])} {_r(node[2])} {_r(node[3])} {node[4]}\n")
                 f.write("\n")
 
-            # Part 2 — Facet list
+            # Part 2: Facet list
             f.write("\n# Part 2 - Facet List\n")
             f.write(f"{self.num_facet} 1\n")
             f.write(self.domain_string)
@@ -1334,11 +1314,11 @@ class PolyAssembler:
                 f.write(self.pml_string)
                 f.write("\n")
 
-            # Part 3 — Hole list
+            # Part 3: Hole list
             f.write("\n# Part 3 - Hole List\n")
             f.write("0\n")
 
-            # Part 4 — Region list
+            # Part 4: Region list
             f.write("\n# Part 4 - Region List\n")
             f.write(f"{self.num_regions}\n")
             for region in self.regions:

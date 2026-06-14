@@ -76,7 +76,7 @@ class AnalyticalLoader:
     Load a semi-analytical CSV (Evert quadrature or empymod DLF output).
 
     Expected column layout:
-        0   : r  (source–receiver separation, m)
+        0   : r  (source-receiver separation, m)
         1   : |Ex| Endfire
         3,4 : Re, Im  Endfire
         5   : |Ex| Broadside
@@ -88,7 +88,7 @@ class AnalyticalLoader:
     ----------
     filepath         : path to the CSV file
     label            : legend label for all datasets from this file
-    sign_flip_bs_ob  : apply −1 to Broadside/Oblique Re and Im (default True)
+    sign_flip_bs_ob  : apply -1 to Broadside/Oblique Re and Im (default True)
     """
 
     def __init__(self, filepath: str, label: str, sign_flip_bs_ob: bool = True):

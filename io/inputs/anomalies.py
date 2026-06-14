@@ -4,8 +4,8 @@ anomalies.py
 Anomalous body definitions embedded in the simulation domain.
 
 Supports:
-  BoxAnomaly    — rectangular prismatic body defined by x/y/z extents
-  SphereAnomaly — spherical body defined by centre + radius, tessellated
+  BoxAnomaly    : rectangular prismatic body defined by x/y/z extents
+  SphereAnomaly : spherical body defined by centre + radius, tessellated
                   as a subdivided icosphere
 
 Both classes expose the same interface:
@@ -22,7 +22,7 @@ from dataclasses import dataclass
 
 
 # =============================================================================
-# Icosphere helper  (module-level; keeps SphereAnomaly a plain dataclass)
+# Icosphere helper
 # =============================================================================
 
 def _build_icosphere(
@@ -92,7 +92,7 @@ def _build_icosphere(
 
 
 # =============================================================================
-# BoxAnomaly  (unchanged from original)
+# BoxAnomaly
 # =============================================================================
 
 @dataclass

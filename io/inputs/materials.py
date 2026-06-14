@@ -75,7 +75,7 @@ class Material:
 
         Uses the largest wavelength (lowest frequency) in this medium to set
         a mesh density of `samples_per_wavelength` elements per wavelength.
-        Volume formula: edge^3 / (6 * sqrt(2)) — regular tetrahedron inscribed
+        Volume formula: edge^3 / (6 * sqrt(2)) : regular tetrahedron inscribed
         in a cube of that edge length.
 
         Must be called before the material is used in assembly.

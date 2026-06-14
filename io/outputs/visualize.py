@@ -41,7 +41,7 @@ _LINESTYLES = [
     "--", "-.", (0, (1, 1)), (0, (3, 1, 1, 1)), (0, (5, 1)), ":",
 ]
 _FIXED = {
-    "Evert": {
+    "Analytical": {
         "color": "#000000", "linestyle": "-", "lw_factor": 1.5,
         "label": "Analytical Solution",
     },
@@ -54,8 +54,8 @@ _FIXED = {
 
 def _build_styles(datasets: list[GPRDataset], base_lw: float = 2.5) -> dict[str, dict]:
     """
-    Return a label → style-dict mapping for a list of datasets.
-    Fixed sources (Evert, empymod) always get the same heavy lines.
+    Return a label-to-style-dict mapping for a list of datasets.
+    Fixed sources (analytical, empymod) always get the same heavy lines.
     All other sources are assigned palette colours in the order they appear.
     """
     styles = {}
@@ -96,7 +96,8 @@ def _auto_xticks(ax, r: np.ndarray) -> None:
 def _save(fig, output_dir: Optional[str], fname: Optional[str]) -> None:
     if output_dir and fname:
         fig.savefig(os.path.join(output_dir, fname), dpi=300)
-    plt.show()
+    else:
+        plt.show()
 
 
 # ---------------------------------------------------------------------------
@@ -105,7 +106,7 @@ def _save(fig, output_dir: Optional[str], fname: Optional[str]) -> None:
 
 class ReceiverLinePlot:
     """
-    2×2 comparison of amplitude (log), phase, real, and imaginary parts
+    2x2 comparison of amplitude (log), phase, real, and imaginary parts
     for multiple datasets on the same axes.
 
     Parameters
@@ -167,8 +168,8 @@ class ReceiverLinePlot:
 
         fig.suptitle(suptitle, fontsize=self.font["suptitle"], fontweight="bold")
         plt.tight_layout(rect=[0, 0, 1, 0.96])
+
         _save(fig, output_dir, fname)
-        return fig
 
 
 # ---------------------------------------------------------------------------
@@ -177,7 +178,7 @@ class ReceiverLinePlot:
 
 class ReceiverLineErrorPlot:
     """
-    2×2 grid showing errors of each dataset relative to a reference.
+    2x2 grid showing errors of each dataset relative to a reference.
     Fixed sources are skipped automatically.
     """
 
@@ -228,8 +229,8 @@ class ReceiverLineErrorPlot:
 
         fig.suptitle(suptitle, fontsize=self.font["suptitle"], fontweight="bold")
         plt.tight_layout(rect=[0, 0, 1, 0.96])
+
         _save(fig, output_dir, fname)
-        return fig
 
 
 # ---------------------------------------------------------------------------
@@ -238,7 +239,7 @@ class ReceiverLineErrorPlot:
 
 class ReceiverLineSimpleErrorPlot:
     """
-    2×2 grid showing errors of each dataset relative to a reference.
+    2x2 grid showing errors of each dataset relative to a reference.
     Fixed sources are skipped automatically.
     """
 
@@ -289,8 +290,8 @@ class ReceiverLineSimpleErrorPlot:
 
         fig.suptitle(suptitle, fontsize=self.font["suptitle"], fontweight="bold")
         plt.tight_layout(rect=[0, 0, 1, 0.96])
+
         _save(fig, output_dir, fname)
-        return fig
     
     def errors(self) -> dict[str, np.ndarray]:
         var_ds = [ds for ds in self.datasets if not self.styles[ds.label]["is_fixed"]]
@@ -304,7 +305,7 @@ class ReceiverLineSimpleErrorPlot:
 
 class ReceiverLineCombined:
     """
-    2×4 figure for one dataset vs an analytical reference.
+    2x4 figure for one dataset vs an analytical reference.
       Row 1 : field curves  (analytical + dataset)
       Row 2 : error curves
     Phase column is placed last.
@@ -386,8 +387,8 @@ class ReceiverLineCombined:
 
         fig.suptitle(suptitle, fontsize=self.font["suptitle"], fontweight="bold")
         plt.tight_layout(rect=[0, 0, 1, 0.96])
+
         _save(fig, output_dir, fname)
-        return fig
 
 
 # ---------------------------------------------------------------------------
@@ -396,7 +397,7 @@ class ReceiverLineCombined:
 
 class ReceiverLineCombinedMulti:
     """
-    2×4 figure for multiple datasets vs an analytical reference.
+    2x4 figure for multiple datasets vs an analytical reference.
       Row 1 : field curves  (analytical + all datasets)
       Row 2 : error curves
     """
@@ -479,8 +480,8 @@ class ReceiverLineCombinedMulti:
 
         fig.suptitle(suptitle, fontsize=self.font["suptitle"], fontweight="bold")
         plt.tight_layout(rect=[0, 0, 1, 0.96])
+
         _save(fig, output_dir, fname)
-        return fig
 
 
 # ---------------------------------------------------------------------------
@@ -489,7 +490,7 @@ class ReceiverLineCombinedMulti:
 
 class ErrorHistogramPlot:
     """
-    1×2 histogram of amplitude (log-spaced bins, %) and phase errors.
+    1x2 histogram of amplitude (log-spaced bins, %) and phase errors.
     Legend shows mean, std, and max for each dataset.
     """
 
@@ -548,8 +549,8 @@ class ErrorHistogramPlot:
 
         fig.suptitle(suptitle, fontsize=self.font["suptitle"], fontweight="bold")
         plt.tight_layout(rect=[0, 0, 1, 0.96])
+
         _save(fig, output_dir, fname)
-        return fig
     
 
 # ---------------------------------------------------------------------------
@@ -558,7 +559,7 @@ class ErrorHistogramPlot:
 
 class SimpleErrorHistogramPlot:
     """
-    1×2 histogram of amplitude (log-spaced bins, %) and phase errors.
+    1x2 histogram of amplitude (log-spaced bins, %) and phase errors.
     Legend shows mean, std, and max for each dataset.
     """
 
@@ -617,8 +618,8 @@ class SimpleErrorHistogramPlot:
 
         fig.suptitle(suptitle, fontsize=self.font["suptitle"], fontweight="bold")
         plt.tight_layout(rect=[0, 0, 1, 0.96])
+
         _save(fig, output_dir, fname)
-        return fig
 
 
 
@@ -628,7 +629,7 @@ class SimpleErrorHistogramPlot:
 
 class ErrorStatPlot:
     """
-    2×2 figure showing mean, std, and max absolute error as a function of a
+    2x2 figure showing mean, std, and max absolute error as a function of a
     scalar parameter (e.g. PML thickness).
 
     Parameters
@@ -699,5 +700,5 @@ class ErrorStatPlot:
 
         fig.suptitle(suptitle, fontsize=self.font["suptitle"], fontweight="bold")
         plt.tight_layout(rect=[0, 0, 1, 0.96])
+
         _save(fig, output_dir, fname)
-        return fig
