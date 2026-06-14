@@ -5,13 +5,13 @@ Data containers and loaders for GPR post-processing.
 
 Classes
 -------
-GPRDataset          – holds one receiver-line dataset (amp, phase, real, imag, r, label)
-AnalyticalLoader    – reads a semi-analytical CSV (Evert / empymod format)
-ElfeLoader          – reads one electric_fields_receiver_line.txt output file
+GPRDataset          - holds one receiver-line dataset (amp, phase, real, imag, r, label)
+AnalyticalLoader    - reads a semi-analytical CSV (Evert / empymod format)
+ElfeLoader          - reads one electric_fields_receiver_line.txt output file
 
 Functions
 ---------
-load_elfe_batch     – bulk-load a list of run directories into ElfeLoader objects
+load_elfe_batch     - bulk-load a list of run directories into ElfeLoader objects
 """
 
 from __future__ import annotations

@@ -7,12 +7,12 @@ All styling logic lives here — no separate style module needed.
 
 Classes
 -------
-ReceiverLinePlot          – 2×2 multi-dataset comparison (amp log, phase, re, im)
-ReceiverLineErrorPlot     – 2×2 errors vs a reference dataset
-ReceiverLineCombined      – 2×4 single dataset: top row = fields, bottom = errors
-ReceiverLineCombinedMulti – 2×4 multi-dataset: top row = fields, bottom = errors
-ErrorHistogramPlot        – 1×2 amplitude + phase error histograms
-ErrorStatPlot             – 2×2 mean / std / max vs a sweep parameter
+ReceiverLinePlot          - 2x2 multi-dataset comparison (amp log, phase, re, im)
+ReceiverLineErrorPlot     - 2x2 errors vs a reference dataset
+ReceiverLineCombined      - 2x4 single dataset: top row = fields, bottom = errors
+ReceiverLineCombinedMulti - 2x4 multi-dataset: top row = fields, bottom = errors
+ErrorHistogramPlot        - 1x2 amplitude + phase error histograms
+ErrorStatPlot             - 2x2 mean / std / max vs a sweep parameter
 """
 
 from __future__ import annotations
@@ -223,8 +223,8 @@ class ReceiverLineErrorPlot:
             if j // 2 == 1:
                 ax.set_xlabel("Distance (m)", fontsize=self.font["label"])
                 _auto_xticks(ax, self.reference.r)
-            if j == 3:
-                ax.legend(fontsize=self.font["legend"])
+            # if j == 3:
+            #     ax.legend(fontsize=self.font["legend"])
 
         fig.suptitle(suptitle, fontsize=self.font["suptitle"], fontweight="bold")
         plt.tight_layout(rect=[0, 0, 1, 0.96])

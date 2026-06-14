@@ -4,17 +4,17 @@ postprocess.py
 Error computation for GPR receiver-line comparisons.
 
 All error functions follow the convention used throughout the notebooks:
-  - amplitude / real / imaginary  →  normalised:  |test − ref| / |ref|
-  - phase                         →  absolute:    test − ref
+  - amplitude / real / imaginary  →  normalised:  |test - ref| / |ref|
+  - phase                         →  absolute:    test - ref
 
 If the test and reference datasets have different receiver grids, the
 reference is interpolated onto the test positions before computing the error.
 
 Functions
 ---------
-field_error(ref, test, qty_idx)  – single-quantity error array
-all_errors(ref, test)            – all four quantities + r in one call
-error_stats(err)                 – (mean, std, max_abs) of a finite error array
+field_error(ref, test, qty_idx)  - single-quantity error array
+all_errors(ref, test)            - all four quantities + r in one call
+error_stats(err)                 - (mean, std, max_abs) of a finite error array
 """
 
 from __future__ import annotations
