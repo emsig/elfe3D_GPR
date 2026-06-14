@@ -9,7 +9,7 @@ FCC ?= gfortran-10
 
 # Path configuration - use environment variable or default to relative path
 # Example: MUMPS_LIB_DIR=../path/to/lib make
-MUMPS_LIB_DIR ?= ../Setup_Aid/elfe3D/Dependencies/MUMPS_5.7.3/lib
+MUMPS_LIB_DIR ?= ../../Setup_Aid/elfe3D/Dependencies/MUMPS_5.7.3/lib
 
 # System information (for reference)
 OS = $(shell uname)

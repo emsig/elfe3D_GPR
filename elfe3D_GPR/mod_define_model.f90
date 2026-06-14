@@ -40,7 +40,7 @@ module define_model
   ! length of method strings
   integer, parameter, public :: msl=20
   ! elfe3D start file
-  character(len=fnl) :: FileName = 'in/elfe3D_input.txt'
+  character(len=fnl) :: FileName = 'elfe3D_input.txt'
   ! variables to read file
   integer :: in_unit = 20
   integer :: opening

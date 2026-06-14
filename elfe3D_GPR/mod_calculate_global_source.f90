@@ -656,10 +656,10 @@ contains
     num_corners = 0
     comp_direction = 9
 
-    ! Read source segment coordinates from in/source.txt and write them 
+    ! Read source segment coordinates from source.txt and write them 
     ! into array segments
     ! First entry is the NW-most source coordinate
-    FileName = 'in/source.txt'
+    FileName = 'source.txt'
 
     ! open the file
     open (in_unit, file = trim(FileName), status='old', &

@@ -71,7 +71,7 @@ contains
     eps = 0.0_dp
 
     ! read region parameters from regionparameters.txt input file
-    ModParaFileName = 'in/regionparameters.txt'
+    ModParaFileName = 'regionparameters.txt'
     ! open the file
     open (in_unit, file = trim(ModParaFileName), status='old', &
                    action = 'read', iostat = opening)

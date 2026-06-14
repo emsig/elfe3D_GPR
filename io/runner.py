@@ -7,15 +7,15 @@ runner.py
 
 Usage in a notebook
 -------------------
-    from runner  import ProjectPaths, run_tetgen, run_solver
-    from survey  import GPRSurvey
+    from elfe3d_gpr.runner import ProjectPaths, run_tetgen, run_solver
+    from elfe3d_gpr.inputs.survey import GPRSurvey
 
     paths  = ProjectPaths(master_dir=MASTER)
     survey = GPRSurvey.build(experiment_name='air_only', base_dir=..., ...)
     survey.generate()
 
     run_tetgen(paths, survey.io.poly_file)
-    run_solver(paths)
+    run_solver(paths, survey)
 
     # results live at:
     # survey.io.output_dir / 'electric_fields_receiver_line.txt'
@@ -73,10 +73,16 @@ def _stream(
     label: str,
     cwd: Union[str, Path, None] = None,
     shell: bool = False,
+    capture_stderr: bool = True,
 ) -> None:
     """
     Run *cmd* and stream every output line to the notebook cell in real time.
     Raises RuntimeError on non-zero exit.
+    
+    Parameters
+    ----------
+    capture_stderr : bool
+        If True, combine stderr with stdout. If False, print stderr separately.
     """
     import sys
     label_line = f"── {label} {'─' * max(1, 50 - len(label))}"
@@ -91,15 +97,23 @@ def _stream(
         cmd,
         cwd=str(cwd) if cwd is not None else None,
         stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
+        stderr=subprocess.STDOUT if capture_stderr else subprocess.PIPE,
         text=True,
         bufsize=1,
         shell=shell,
     )
 
+    # Stream stdout
     for line in proc.stdout:
         print(line, end="")
         sys.stdout.flush()
+
+    # If not capturing stderr, read and print it now
+    if not capture_stderr and proc.stderr:
+        stderr_output = proc.stderr.read()
+        if stderr_output:
+            print(stderr_output, end="")
+            sys.stdout.flush()
 
     proc.wait()
     elapsed = time.time() - t0
@@ -122,6 +136,7 @@ def run_tetgen(
     poly_file,
     flags: str = "-pq1.2kAaen",
     binary: str = "/usr/bin/tetgen",
+    debug: bool = False,
 ) -> None:
     """
     Mesh the geometry with TetGen.
@@ -129,7 +144,24 @@ def run_tetgen(
     On Windows with WSL enabled the command is run inside WSL.
     On native Linux the command is run directly from the mesh folder.
 
+    Parameters
+    ----------
+    paths : ProjectPaths
+        Path configuration
+    poly_file : path-like
+        Path to the .poly file to mesh
+    flags : str
+        TetGen flags. Default "-pq1.2kAaen" is strict; try "-pq2.0kAaen" or 
+        "-pkaen" if meshing fails with geometry errors.
+    binary : str
+        Path to tetgen executable
+    debug : bool
+        If True, separate stderr output for better error visibility
+
         run_tetgen(paths, survey.io.poly_file)
+        
+        # If meshing fails, try relaxing the quality constraint:
+        run_tetgen(paths, survey.io.poly_file, flags="-pq2.0kAaen")
     """
     poly_path = Path(poly_file)
     cmd = _command_tokens(binary, flags, [poly_path.name])
@@ -143,7 +175,7 @@ def run_tetgen(
     else:
         cwd = poly_path.parent
 
-    _stream(cmd, "TetGen", cwd=cwd)
+    _stream(cmd, "TetGen", cwd=cwd, capture_stderr=(not debug))
 
 
 def run_solver(paths: ProjectPaths, survey) -> None:
@@ -153,7 +185,7 @@ def run_solver(paths: ProjectPaths, survey) -> None:
     On Windows with WSL enabled the executable is run inside WSL.
     On native Linux it is run directly from the survey input folder.
     """
-    input_dir = Path(survey.io.base_dir)
+    input_dir = Path(survey.io.input_dir)
     exe_path = paths.exec_path()
 
     if paths.use_wsl:
