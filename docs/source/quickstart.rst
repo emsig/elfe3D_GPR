@@ -93,4 +93,4 @@ run the following minimal python script:
 
 
 Running this script will result in the same outputs as the Fortran option described in the section above :ref:`fortran_quick`. 
-You can now proceed with more detailed analysis with the generated outputs using the tools described in :doc:`python_module`.
+You can now proceed with more details on the inputs of ``elfe3D_GPR`` modelling described in :doc:`inputs_and_models`.
