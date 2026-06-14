@@ -4,7 +4,7 @@ References
 Key Literature
 --------------
 
-.. [SIN2025] Singh, C. D., Rulff, P., and Slob, E. (2025). Wide-band Ground Penetrating Radar Modelling using Finite Elements and Perfectly Matched Layers. Master's thesis, Delft University of Technology. `https://repository.tudelft.nl/record/uuid:b883c3d6-beb2-4842-b867-21d0c777aff7 <https://repository.tudelft.nl/record/uuid:b883c3d6-beb2-4842-b867-21d0c777aff7>`_
+.. [SIN2025] Singh, C.D. (2025). Frequency-Domain Wideband Ground Penetrating Radar Modelling: Using Finite Elements and Perfectly Matched Layers. Master's Thesis, Delft University of Technology. `https://resolver.tudelft.nl/uuid:b883c3d6-beb2-4842-b867-21d0c777aff7 <https://resolver.tudelft.nl/uuid:b883c3d6-beb2-4842-b867-21d0c777aff7>`_
 
 .. [RUL2023] Rulff, P. (2023). Three-dimensional forward modelling and inversion of controlled-source electromagnetic data using the edge-based finite-element method. Doctoral dissertation, Acta Universitatis Upsaliensis.
 
