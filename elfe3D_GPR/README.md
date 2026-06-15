@@ -1,41 +1,41 @@
 # elfe3D GPR
-Modelling with the total electric field approach using finite elements in 3D
 
-update v.1.1.0: plotting fields in domain
+`elfe3D_GPR` is a 3D edge-based **Finite Element** (FE) software for **Ground Penetrating Radar** (GPR) geophysical heterogeneous models in the frequency domain.
 
-In this `elfe3D` version, the dielectric permitticity is a variable model parameter.
-It will be tested and anvanced for 3D Ground Penetrating Radar (GPR) modelling.
+## Getting started:
 
-_About:_
+You find the `elfe3D_GPR` manual including installation instructions at this [link](). 
 
-`elfe3D` is a 3D forward modelling code that can simulate electric and magnetic field responses from frequency-domain controlled-source electromagnetic geophysical setups. It uses tetrahedral meshes and first-order finite-element approximations. In addition, adaptive mesh refinement approaches are implemented.
+## Contributions:
 
-_Statement of need:_
+`elfe3D_GPR` builds on the `elfe3D` software developed by Paula Rulff ([Github](https://github.com/emsig/elfe3D)) that simulates diffusive-field problems in Controlled-Source Electromagnetism. 
 
-`elfe3D`  solves forward problems arising from the curl-curl equation in terms of the total electric field using a direct forward solver. The code is designed for Earth Scientists who want to simulate electric and magnetic field responses originating from a transmitter and the interaction of its transmitted signal with the 3D Earth. This so-called controlled-source electromagnetic method is used to search for resources and environmental applications, such as geothermal energy, minerals or groundwater. The air and the Earth’s subsurface consist of cells hosting variable model parameters: isotropic electric resistivities, magnetic permeabilities and dielectric permittivities. Compared to standard electromagnetic geophysical simulation software, `elfe3D` excels in flexibility regarding subsurface geometries and survey settings, i.e. receivers can be arbitrarily placed in the modelling domain and the electrical properties can be flexibly distributed in the subsurface upon model design. Implemented adaptive mesh refinement approaches can automatically design problem-specific meshes and optimise computational load and solution accuracy.
+Both `elfe3D` and `elfe3D_GPR` are programmed in Fortran 90, that use:
+- [tetgen](https://wias-berlin.de/software/index.jsp?id=TetGen&lang=1) (the Fortran version 1.5 currently), for producing unstructured tetrahedral mesh, and
+- [MUMPS](https://mumps-solver.org/index.php) for solving the FE system of linear equations.
 
-_Contributions:_
+The major changes between `elfe3D` and `elfe3D_GPR` are as follows:
 
-An earlier version of the code that `elfe3D` is based on was developed by Paula Rulff with contributions from Laura Maria Buntin and Thomas Kalscheuer at Uppsala University from 2018-2023 financed by the Smart Exploration project (European Union’s Horizon 2020 funding, grant agreement No. 775971).
+- `elfe3D_GPR` solves the full wave equation of electromagnetism based on Maxwell's equations (whereas `elfe3D` solved the approximated equation for diffusive-field regime of very low frequencies.)
+- A **Perfectly Matched Layer (PML)** is added to absorb outgoing waves from the truncated computational model domain.
 
-The present version of `elfe3D` was released in 2024 under the Apache License, Version 2.0. Further developments of `elfe3D` by Paula Rulff, now at Delft University of Technology, are ongoing. Suggestions for improvements are welcome!
+These two major changes have been rigorously developed and described in the master's thesis written by Chaitanya Singh, and supervised by Paula Rulff and Evert Slob ([thesis_doc](https://resolver.tudelft.nl/uuid:b883c3d6-beb2-4842-b867-21d0c777aff7)).
 
-_Contact_: p.rulff@tudelft.nl
+Since the thesis, `elfe3D_GPR` now also includes a Python I/O module for rapid and intuitive input model generation and output processing.
 
-_Getting started:_
+## Contact: 
 
-You find the `elfe3D` manual including instalation instructions in `elfe3D/elfe3D/README.md`.
-`elfe3D` can be compiled with the provided Makefile.
-Note that, the open source mesh generator `tetgen` and the direct solver `MUMPS` must be installed additionally.
+If you would like to discuss the theoretical background of ``elfe3D_GPR``, suggest changes to the software, or would like to contribute, 
+you are welcome to contact us at: [chaitanya.singh@northumbria.ac.uk](chaitanya.singh@northumbria.ac.uk).
 
-_Credits:_
+## Credits:
 
-If you publish results generated with `elfe3D`, please give credit to the `elfe3D` developers by citing:
+If you publish results generated with `elfe3D_GPR`, please give credit to the `elfe3D_GPR` developers by citing:
 
-Paula Rulff, Laura M Buntin, Thomas Kalscheuer, Efficient goal-oriented  mesh refinement in 3-D finite-element modelling adapted for controlled source electromagnetic surveys, Geophysical Journal International, Volume 227, Issue
-3, December 2021, Pages 1624–1645, https://doi.org/10.1093/gji/ggab264
+> Singh, C.D. (2025). Frequency-Domain Wideband Ground Penetrating Radar Modelling: Using Finite Elements and Perfectly Matched Layers. Master's Thesis, Delft University of Technology. [https://resolver.tudelft.nl/uuid:b883c3d6-beb2-4842-b867-21d0c777aff7](https://resolver.tudelft.nl/uuid:b883c3d6-beb2-4842-b867-21d0c777aff7).
 
-and refer to the `elfe3D` version you used via the ZENODO DOI: https://doi.org/10.5281/zenodo.13309721
+and `elfe3D` developers by citing:
 
-Do not forget to acknowledge `MUMPS` and `tetgen` developers!
+> Paula Rulff, Laura M Buntin, Thomas Kalscheuer, Efficient goal-oriented mesh refinement in 3-D finite-element modelling adapted for controlled source electromagnetic surveys, Geophysical Journal International, Volume 227, Issue 3, December 2021, Pages 1624–1645, [https://doi.org/10.1093/gji/ggab264](https://doi.org/10.1093/gji/ggab264).
 
+Do not forget to acknowledge `MUMPS` and `TetGen` developers!
