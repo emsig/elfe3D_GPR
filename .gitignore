@@ -22,3 +22,4 @@ __pycache__/
 docs/_build*
 docs/elfe3D_README.md
 elfe3d_gpr
+!outputs.rst
