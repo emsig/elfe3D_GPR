@@ -8,7 +8,7 @@ You find the `elfe3D_GPR` manual including installation instructions at this [li
 
 ## Contributions:
 
-`elfe3D_GPR` builds on the `elfe3D` software developed by Paula Rulff ([Github](https://github.com/emsig/elfe3D)) that simulates diffusive-field problems in Controlled-Source Electromagnetism. 
+`elfe3D_GPR` builds on the `elfe3D` software developed by Paula Rulff ([GitHub](https://github.com/emsig/elfe3D)) that simulates diffusive-field problems in Controlled-Source Electromagnetism. 
 
 Both `elfe3D` and `elfe3D_GPR` are programmed in Fortran 90, that use:
 - [tetgen](https://wias-berlin.de/software/index.jsp?id=TetGen&lang=1) (the Fortran version 1.5 currently), for producing unstructured tetrahedral mesh, and
