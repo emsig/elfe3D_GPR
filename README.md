@@ -4,7 +4,7 @@
 
 ## Getting started:
 
-You find the `elfe3D_GPR` manual including installation instructions at this [link](). 
+You find the `elfe3D_GPR` manual including installation instructions at this [link](https://elfe3d-gpr.readthedocs.io/en/latest/). 
 
 ## Contributions:
 
