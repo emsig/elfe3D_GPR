@@ -4,8 +4,8 @@ import sys
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 
 project = 'elfe3D_GPR'
-author = 'elfe3D_GPR developers'
-release = '0.9.0-beta'
+author = 'elfe3D_GPR contributors'
+release = '1.0.0-beta'
 
 extensions = [
     'sphinx.ext.autodoc',
