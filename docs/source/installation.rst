@@ -6,12 +6,12 @@ This page describes the core installation and build steps for ``elfe3D_GPR``.
 System Prerequisites
 --------------------
 
-- a modern Fortran compiler (Fortran 2008 or later compiler for ``.f90`` sources; tested on ``gfortran``).
-- ``make``
-- ``OpenBLAS`` (with ``libopenblas-dev``, for example).
-- ``TetGen`` for mesh generation (tested on ``tetgen`` version 1.5, might not work with version 1.6)
-- ``MUMPS`` for the direct linear algebra solver.
-- ``Python 3.10+`` for the Python I/O wrapper and docs build.
+- a modern Fortran compiler (Fortran 2008 or later compiler for ``.f90`` sources; tested on ``gfortran``),
+- ``make``,
+- ``OpenBLAS`` (with ``libopenblas-dev``, for example),
+- ``TetGen`` for mesh generation (tested on ``tetgen`` version 1.5, might not work with version 1.6),
+- ``MUMPS`` for the direct linear algebra solver,
+- ``Python 3.10+`` for the Python I/O wrapper.
 
 Platforms
 ---------
@@ -31,6 +31,7 @@ You can find the source code for elfe3D_GPR on `https://github.com/emsig/elfe3D_
 On a Linux/WSL machine, you can start with opening the Command Prompt/Terminal, and execute the following ``git`` commands to download it:
 
 .. code-block:: bash
+
    cd <empty folder location> #replace with a path of your choice
    git clone https://github.com/emsig/elfe3D_GPR.git
    cd elfe3D_GPR
@@ -42,6 +43,7 @@ Install TetGen
 Otherwise, you can also simply:
 
 .. code-block:: bash
+
    apt policy tetgen       # Checks which tetgen version is available - ideally 1.5
    sudo apt install tetgen
 
