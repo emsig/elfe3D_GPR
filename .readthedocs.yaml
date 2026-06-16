@@ -1,0 +1,14 @@
+﻿version: 2
+
+build:
+  image: latest
+
+python:
+  version: 3.11
+  install:
+    - method: pip
+      packages:
+        - sphinx
+        - myst-parser
+        - myst-nb
+        - sphinx-rtd-theme

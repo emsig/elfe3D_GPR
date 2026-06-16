@@ -7,6 +7,25 @@
 *.o
 *.mod
 *.vol
+<<<<<<< HEAD
 *.txt
 *.h
 elfe3D/elfe3d
+=======
+*.h
+*.pyc
+
+out*
+data/data_empymod/*
+empymod*
+*.egg-info/
+__pycache__/
+
+!io/outputs/
+!docs/source/outputs.md
+
+docs/_build*
+docs/elfe3D_README.md
+elfe3d_gpr
+!outputs.rst
+>>>>>>> elfe3D_GPR_src

@@ -1,0 +1,67 @@
+# Doxyfile 1.9.6
+
+PROJECT_NAME           = "elfe3D_GPR"
+PROJECT_BRIEF          = "Fortran solver API documentation for elfe3D_GPR"
+OUTPUT_DIRECTORY       = docs/_build/html
+CREATE_SUBDIRS         = NO
+OUTPUT_LANGUAGE        = English
+INPUT_ENCODING         = UTF-8
+FILE_PATTERNS          = *.f90 *.F90 *.f *.F *.mod *.h
+RECURSIVE              = YES
+INPUT                  = elfe3D_GPR
+EXCLUDE                = .git
+EXCLUDE_PATTERNS       = */.git/*
+EXTRACT_ALL            = YES
+EXTRACT_PRIVATE        = YES
+EXTRACT_STATIC         = YES
+EXTRACT_LOCAL_CLASSES  = YES
+EXTRACT_LOCAL_METHODS  = YES
+OPTIMIZE_OUTPUT_FOR_C  = NO
+OPTIMIZE_OUTPUT_JAVA   = NO
+OPTIMIZE_FOR_FORTRAN   = YES
+BUILTIN_STL_SUPPORT    = NO
+MICROSOFT_DOCS         = NO
+
+# HTML output
+GENERATE_HTML          = YES
+HTML_OUTPUT            = doxygen
+HTML_FILE_EXTENSION    = .html
+HTML_COLORSTYLE_HUE    = 220
+HTML_COLORSTYLE_SAT    = 100
+HTML_COLORSTYLE_GAMMA  = 80
+HTML_TIMESTAMP         = YES
+GENERATE_TREEVIEW      = YES
+
+# Disable outputs we don't need for local build
+GENERATE_LATEX         = NO
+GENERATE_MAN           = NO
+GENERATE_RTF           = NO
+GENERATE_XML           = NO
+GENERATE_DOCSET        = NO
+GENERATE_AUTOGEN_DEF   = NO
+GENERATE_PERLMOD       = NO
+GENERATE_PDF           = NO
+
+# Source browsing
+SOURCE_BROWSER         = YES
+INLINE_SOURCES         = YES
+STRIP_CODE_COMMENTS    = NO
+
+# Dot support off by default to avoid requiring Graphviz
+HAVE_DOT               = NO
+CALL_GRAPH             = NO
+CALLER_GRAPH           = NO
+CLASS_DIAGRAMS         = NO
+
+# Warnings and verbosity
+QUIET                  = NO
+WARNINGS               = YES
+WARN_IF_UNDOCUMENTED   = YES
+WARN_IF_DOC_ERROR      = YES
+WARN_NO_PARAMDOC       = YES
+
+# Treat Fortran comments and modules
+FORTRAN_PREFIX         = "!"
+
+# Use the default layout
+LAYOUT_FILE            = 
