@@ -2,7 +2,8 @@ Overview
 ========
 
 ``elfe3D_GPR`` is a 3D edge-based **Finite Element** (FE) software for **Ground Penetrating Radar** (GPR) geophysical heterogeneous models in the frequency-domain. 
-Unlike time-domain simulation codes, ``elfe3D_GPR`` produces field distributions directly in the frequency-domain based on the input frequencies of interest.
+Unlike time-domain simulation codes, ``elfe3D_GPR`` produces field distributions directly in the frequency-domain based on the input frequencies of interest. 
+``elfe3D_GPR`` is written in modern Fortran and uses shared-memory parallelisation with OpenMP.
 
 Origin
 ------

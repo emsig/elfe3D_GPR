@@ -9,7 +9,7 @@ System Prerequisites
 - a modern Fortran compiler (Fortran 2008 or later compiler for ``.f90`` sources; tested on ``gfortran``).
 - ``make``
 - ``OpenBLAS`` (with ``libopenblas-dev``, for example).
-- ``TetGen`` for mesh generation.
+- ``TetGen`` for mesh generation (tested on ``tetgen`` version 1.5, might not work with version 1.6)
 - ``MUMPS`` for the direct linear algebra solver.
 - ``Python 3.10+`` for the Python I/O wrapper and docs build.
 
@@ -26,19 +26,23 @@ run ``elfe3D_GPR`` simulations (this has also been tested).
 
 Build the Fortran solver
 ------------------------
+You can find the source code for elfe3D_GPR on `https://github.com/emsig/elfe3D_GPR <https://github.com/emsig/elfe3D_GPR>`_.
 
-The core solver source is located in ``elfe3D_GPR/``.
-``elfe3D_GPR`` is written in modern Fortran and uses shared-memory parallelisation with OpenMP.
-The system of equations is solved with a direct solver.
+On a Linux/WSL machine, you can start with opening the Command Prompt/Terminal, and execute the following ``git`` commands to download it:
+
+.. code-block:: bash
+   cd <empty folder location> #replace with a path of your choice
+   git clone https://github.com/emsig/elfe3D_GPR.git
+   cd elfe3D_GPR
 
 Install TetGen
 ^^^^^^^^^^^^^^
 
 ``TetGen`` can be downloaded from <https://wias-berlin.de/software/index.jsp?id=TetGen>. 
-Otherwise, on Debian/Ubuntu, you can:
+Otherwise, you can also simply:
 
 .. code-block:: bash
-
+   apt policy tetgen       # Checks which tetgen version is available - ideally 1.5
    sudo apt install tetgen
 
 
